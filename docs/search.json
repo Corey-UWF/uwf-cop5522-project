@@ -1,0 +1,30 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Website for Final Project",
+    "section": "",
+    "text": "This is a Quarto website.\nTo learn more about Quarto websites visit https://quarto.org/docs/websites."
+  },
+  {
+    "objectID": "index.html#latex-tests",
+    "href": "index.html#latex-tests",
+    "title": "Website for Final Project",
+    "section": "LaTeX Tests",
+    "text": "LaTeX Tests\nMass-Energy Equivalence Equation (in-line equation): \\(E = mc^2\\)\nContinuous Fourier Transform Equation (block equation): \\[\nX(\\omega) = \\int_{-\\infty}^{\\infty} x(t) e^{-i\\omega t} \\, dt\n\\]"
+  },
+  {
+    "objectID": "index.html#project-team-members",
+    "href": "index.html#project-team-members",
+    "title": "Website for Final Project",
+    "section": "Project Team Members",
+    "text": "Project Team Members\n\nCorey Stewart\nRolando Veliz\nZack Whalen"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "About this site"
+  }
+]

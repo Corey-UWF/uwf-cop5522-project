@@ -1,0 +1,21 @@
+---
+title: "Website for Final Project"
+---
+
+This is a Quarto website.
+
+To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+
+## LaTeX Tests
+
+Mass-Energy Equivalence Equation (in-line equation): $E = mc^2$
+
+Continuous Fourier Transform Equation (block equation):
+$$
+X(\omega) = \int_{-\infty}^{\infty} x(t) e^{-i\omega t} \, dt
+$$
+
+## Project Team Members
+* **Corey Stewart**
+* **Rolando Veliz**
+* **Zack Whalen**

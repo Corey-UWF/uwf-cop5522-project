@@ -1,2 +1,3 @@
-# uwf-cop5522-project
-Repository to hold COP 5522 Project information
+# UWF COP5522 Final Project
+This website will hold information about the final project using Quarto.
+
