@@ -16,6 +16,7 @@ X(\omega) = \int_{-\infty}^{\infty} x(t) e^{-i\omega t} \, dt
 $$
 
 ## Project Team Members
+* **Kieren Gregory**
 * **Corey Stewart**
 * **Rolando Veliz**
 * **Zack Whalen**
