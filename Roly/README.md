@@ -1,159 +1,264 @@
-# Rolando Veliz - Sequential Performance Engineering
+# Rolando Veliz - Sequential Performance Work
 
-## Role
+## My Part of the Project
 
-My primary responsibility for the COP 5522 term project is sequential
-performance engineering for the sparse-dense-dense computation
+My main responsibility for the COP 5522 term project is the sequential
+performance work for:
 
     Y = A X W
 
 where:
 
-- A is a sparse matrix stored in CSR format.
-- X is a dense feature matrix.
-- W is a dense weight matrix.
-- Y is the resulting dense matrix.
+- `A` is a sparse matrix stored in CSR format
+- `X` is a dense feature matrix
+- `W` is a dense weight matrix
+- `Y` is the resulting dense matrix
 
-The project compares the two mathematically equivalent multiplication
-orders:
+I have been looking at both mathematically equivalent ways to perform
+the computation:
 
     (AX)W
     A(XW)
 
-The broader team project will also investigate OpenMP shared-memory
-parallelism and MPI distributed-memory parallelism.
+My goal has been to first establish a correct sequential baseline and
+then use measurements, compiler analysis, and profiling to determine
+which optimizations actually help instead of assuming that a change
+will automatically make the program faster.
 
-## Current Progress
+## Earlier Sequential Work
 
-A controlled sequential benchmark has been developed and validated.
+I started with a synthetic benchmark so I could experiment with the
+kernels in a controlled environment.
 
-The benchmark:
+That work is preserved as:
 
-- checks that both multiplication orders produce matching results;
-- performs one warm-up run;
-- performs five measured runs;
-- reports median execution times;
-- reports GFLOP/s for individual stages;
-- keeps allocation, initialization, verification, and reporting outside
-  the timed multiplication regions.
+    src/project1_portable_sequential_v12.c
 
-Several sequential optimization avenues have been investigated rather
-than stopping at the first successful optimization.
+Some of the areas I tested were:
 
-Experiments completed include:
+- compiler optimization levels
+- sparse feature blocking
+- software prefetching
+- pointer `restrict`
+- dense loop ordering
+- GCC vectorization reports
+- generated assembly
+- hardware performance counters
+- cross-platform behavior
 
-- compiler optimization levels;
-- multiplication-order comparison;
-- pointer `restrict`;
-- sparse feature blocking;
-- software prefetching;
-- compiler vectorization analysis;
-- generated-assembly inspection;
-- dense loop-order optimization;
-- cross-platform validation.
-
-## Main Finding So Far
-
-The most important portable optimization has been changing dense matrix
-multiplication from the traditional:
+The biggest portable improvement came from changing the dense matrix
+multiplication loop order from:
 
     i -> j -> k
 
-loop order to:
+to:
 
     i -> k -> j
 
-This improves row-major memory locality and gives the compiler a much
-simpler contiguous inner loop to vectorize.
+With row-major storage, the new inner loop walks through the dense rows
+contiguously. GCC also showed that it could vectorize this version much
+more effectively.
 
-In the final controlled comparison on the COP 5522 development VM, the
-portable sequential version achieved approximately:
+Sparse blocking and software prefetching were less consistent across
+machines. A configuration that helped on the development VM did not
+always help on the other systems.
 
-- 6.06x speedup for (AX)W;
-- 7.56x speedup for A(XW);
-- 8.21x speedup for the dense (AX) * W stage;
-- 8.70x speedup for the dense X * W stage.
-
-Sparse optimizations were much more architecture-dependent.
-
-## Frozen Sequential Reference
-
-The current portable sequential benchmark configuration is:
+The portable v12 checkpoint uses:
 
     FEATURE_BLOCK=128
     PREFETCH_DISTANCE=0
     DENSE_IKJ=1
 
-Frozen source:
+I am keeping v12 in the repository because it documents the earlier
+optimization process, but it is no longer the newest project version.
 
-    src/project1_portable_sequential_v12.c
+## File-Driven Project Versions
 
-Authoritative source SHA-256:
-
-    2deda5af6e3c95efa72e363d8812fcaabfaa757b8544f4fbd1c0341da16ce627
-
-The frozen source is a performance benchmark/reference implementation.
-It is not yet the final Project 2 submission program.
-
-## Cross-Platform Testing
-
-Sequential experiments have been performed on:
-
-- the COP 5522 Linux development VM;
-- UWF cs-ssh;
-- PSC Bridges-2;
-- SDSC Expanse.
-
-The dense i-k-j optimization generalized strongly across the tested
-systems. Sparse blocking and software prefetching behaved differently
-depending on the processor/compiler environment.
-
-This reinforced an important project principle: optimizations should be
-measured rather than assumed to be portable.
-
-## Current Limitation
-
-The current benchmark uses a synthetic sparse matrix with exactly
-16 nonzeros per row.
-
-This regular workload is useful for controlled performance experiments,
-but it does not yet represent the irregular degree distribution expected
-from the power-law graph workload that motivates the project.
-
-## Next Steps
-
-The professor has released the project reference implementation and the
-required file-based interface:
+After the professor released the required file interface:
 
     project A.csr X.dense W.dense Y.dense
 
-The next work will:
+I moved the sequential work into that format.
 
-1. inspect and reproduce the professor's exact CSR and dense text formats;
-2. integrate the required file-based interface;
-3. transplant the validated sequential kernels into that implementation;
-4. test irregular/power-law sparse workloads;
-5. continue profiling and performance analysis;
-6. evaluate OpenMP thread counts and scheduling strategies;
-7. evaluate MPI data distribution and communication;
-8. measure speedup, efficiency, load balance, and scalability.
+### v15 - File-Driven Baseline
 
-Relevant optimization avenues from the course lectures will continue to
-be considered systematically. Techniques that do not improve performance
-will also be documented because negative results help identify which
-optimizations actually matter for this workload.
+Source:
+
+    src/project1_fileio_portable_v15.c
+
+This is the portable professor-style baseline. The main computational
+order is:
+
+    (AX)W
+
+The main portability change was replacing the course-specific timing
+header with a local `CLOCK_MONOTONIC` timer. The matrix operations,
+file formats, and timing boundaries were otherwise kept consistent with
+the professor's reference structure.
+
+### v16 - Optimized (AX)W
+
+Source:
+
+    src/project1_fileio_optimized_v16.c
+
+This version keeps the same multiplication order as v15 but uses the
+portable optimizations that survived the earlier testing:
+
+    FEATURE_BLOCK=128
+    PREFETCH_DISTANCE=0
+    dense loop order = i-k-j
+
+### v17 - Optimized A(XW)
+
+Source:
+
+    src/project1_fileio_reassociated_v17.c
+
+This version uses the same optimized kernels as v16 but changes the
+association to:
+
+    A(XW)
+
+For the current test dimensions, `F=128` and `H=64`, this means the
+sparse multiplication in v17 works across 64 columns instead of 128.
+
+## Current Performance Results
+
+The current file-driven benchmark uses:
+
+    N = 4000
+    F = 128
+    H = 64
+    nnz(A) = 64000
+    16 nonzeros per row
+
+Each version was given one warm-up run followed by five measured runs.
+The execution order was rotated between versions, and the median of the
+five measured runs was used for comparison.
+
+File I/O was kept outside the timed multiplication region.
+
+### UWF cs-ssh
+
+CPU:
+
+    Intel Xeon Gold 6338N
+
+| Version | Median runtime | Speedup vs v15 |
+|---|---:|---:|
+| v15 baseline `(AX)W` | 32.369 ms | 1.000x |
+| v16 optimized `(AX)W` | 7.886 ms | 4.105x |
+| v17 optimized `A(XW)` | 5.187 ms | 6.240x |
+
+For this workload, v17 was about 1.52x faster than v16 on cs-ssh.
+
+### SDSC Expanse
+
+Performance node:
+
+    exp-1-11
+
+CPU:
+
+    AMD EPYC 7742 64-Core Processor
+
+| Version | Median runtime | Speedup vs v15 |
+|---|---:|---:|
+| v15 baseline `(AX)W` | 32.284 ms | 1.000x |
+| v16 optimized `(AX)W` | 7.226 ms | 4.468x |
+| v17 optimized `A(XW)` | 5.745 ms | 5.620x |
+
+For this workload, v17 was about 1.26x faster than v16 on Expanse.
+
+The same reassociation helped on both systems, although the amount of
+improvement was different on each machine.
+
+## Correctness
+
+v15 and v16 produced byte-for-byte identical output.
+
+The output SHA-256 was:
+
+    8e708a154ae67ca79a153c388526aa1d34e5b08abed998c3a1d87361bf16da29
+
+v17 changes the order of the floating-point operations, so I did not
+expect its output to be byte-for-byte identical.
+
+A full comparison of all 256,000 output values between v16 and v17
+showed:
+
+    Maximum absolute difference: 6.11e-05
+    Maximum relative difference: 7.49260208e-07
+    Tolerance failures: 0
+
+using:
+
+    absolute tolerance = 1e-4
+    relative tolerance = 1e-4
+
+## What I Have Learned So Far
+
+For the current workload with:
+
+    N=4000, F=128, H=64
+
+v17 `A(XW)` has been the fastest sequential version on both cs-ssh and
+Expanse.
+
+That does not mean `A(XW)` will always be faster.
+
+Earlier testing with `F=64` and `H=128` showed that the preferred order
+can reverse. The matrix dimensions affect how much work is done in the
+sparse stage, so the better order depends on the shape of the problem.
+
+The results also showed that some optimizations are much more portable
+than others. The dense `i-k-j` loop change helped consistently, while
+sparse blocking and software prefetching depended much more on the
+machine.
+
+## Current Limitation
+
+The current sparse matrix has exactly 16 nonzeros in every row.
+
+That makes it useful for controlled testing, but it does not behave like
+the irregular or power-law graphs that motivate the project.
+
+The next useful sequential test is an irregular sparse workload so we
+can see whether the same conclusions still hold when the row lengths
+are not uniform.
 
 ## Files
 
+### Source
+
 - `src/project1_portable_sequential_v12.c`
-  - frozen portable sequential benchmark source.
+  - earlier portable optimization checkpoint
 
-- `checksums/project1_portable_sequential_v12.sha256`
-  - checksum identifying the frozen source.
+- `src/project1_fileio_portable_v15.c`
+  - file-driven sequential baseline
 
-- `docs/LOG.txt`
-  - detailed experimental log, including successful and unsuccessful
-    optimization attempts.
+- `src/project1_fileio_optimized_v16.c`
+  - optimized `(AX)W`
+
+- `src/project1_fileio_reassociated_v17.c`
+  - optimized `A(XW)`
+
+### Results
 
 - `results/sequential-results.md`
-  - summarized sequential performance results and conclusions.
+  - summary of the current sequential results
+
+- `results/sequential-cross-platform-v15-v17.txt`
+  - detailed cs-ssh and Expanse comparison
+
+### Experiment History
+
+- `docs/LOG.txt`
+  - chronological notes from the sequential experiments, including
+    approaches that helped and approaches that did not
+
+### Checksums
+
+The `checksums/` directory contains SHA-256 files for the frozen source
+versions so the exact tested files can be identified later.

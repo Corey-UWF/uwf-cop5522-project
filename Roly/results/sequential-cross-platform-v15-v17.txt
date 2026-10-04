@@ -1,0 +1,353 @@
+COP 5522 Project 1
+Cross-Platform Sequential Performance Record
+==============================================
+
+Scope
+-----
+This record consolidates the verified file-driven sequential
+experiments performed on:
+
+    1. cs-ssh
+    2. SDSC Expanse
+
+The Linux VM was used for development and validation, but its
+performance measurements are not treated as official target-system
+results in this comparison.
+
+All three implementations use the professor-compatible four-file
+interface and the same frozen benchmark input files.
+
+Workload
+--------
+N = 4000
+F = 128
+H = 64
+
+nnz per row = 16
+nnz(A) = 64000
+
+The sparse matrix is deterministic and regular, with exactly
+16 nonzeros per row.
+
+This workload is NOT a power-law or otherwise irregular sparse
+graph. Conclusions about scheduling or load balance must therefore
+not be generalized to irregular graph workloads.
+
+Implementations
+---------------
+v15:
+    Professor-style portable baseline
+    Association: (A X) W
+
+v16:
+    Optimized sparse and dense kernels
+    Association: (A X) W
+    Sparse feature blocking: 128
+    Software prefetch: disabled
+    Dense multiply traversal: i-k-j
+
+v17:
+    Same optimized kernels as v16
+    Association changed to: A (X W)
+
+Nominal Floating-Point Operations
+---------------------------------
+v15 / v16:
+    81,920,000 FLOPs
+
+v17:
+    73,728,000 FLOPs
+
+For F = 128 and H = 64, v17 performs 10.00% fewer nominal
+floating-point operations than v16.
+
+Because v16 and v17 have different operation counts, runtime is the
+primary metric when comparing the two algorithms.
+
+Measurement Methodology
+-----------------------
+For both target systems:
+
+    - Same frozen C sources
+    - Same frozen input files
+    - GCC 8.5.0
+    - Compiler flags:
+          -Wall -pedantic -std=c99 -O3
+    - File I/O excluded from timed region
+    - One warm-up per implementation
+    - Five measured runs
+    - Execution order rotated among v15, v16, and v17
+    - Median of five measured runs used as primary result
+    - Correctness verified independently of performance conclusions
+
+================================================================
+CS-SSH RESULTS
+================================================================
+
+System
+------
+Host:
+    cs-ssh.argo.uwf.edu
+
+CPU:
+    Intel Xeon Gold 6338N @ 2.20 GHz
+
+Compiler:
+    GCC 8.5.0 20210514
+    Red Hat 8.5.0-28
+
+v15 - Baseline (AX)W
+--------------------
+Measured times:
+    33281.2 us
+    32368.7 us
+    33128.0 us
+    31847.5 us
+    31685.9 us
+
+Median:
+    32368.7 us
+    32.369 ms
+
+Median performance:
+    2.531 GFLOP/s
+
+v16 - Optimized (AX)W
+---------------------
+Measured times:
+    7903.98 us
+    7885.63 us
+    7619.34 us
+    7425.12 us
+    8284.69 us
+
+Median:
+    7885.63 us
+    7.886 ms
+
+Median performance:
+    10.389 GFLOP/s
+
+Improvement over v15:
+    4.105x speedup
+    75.64% lower runtime
+
+v17 - Optimized A(XW)
+---------------------
+Measured times:
+    5150.53 us
+    5205.55 us
+    5276.44 us
+    5047.79 us
+    5187.19 us
+
+Median:
+    5187.19 us
+    5.187 ms
+
+Median performance:
+    14.213 GFLOP/s
+
+Improvement over v15:
+    6.240x speedup
+    83.97% lower runtime
+
+Improvement over v16:
+    1.520x speedup
+    34.22% lower runtime
+
+================================================================
+EXPANSE RESULTS
+================================================================
+
+Performance node:
+    exp-1-11
+
+CPU:
+    AMD EPYC 7742 64-Core Processor
+
+Observed compute-node configuration:
+    128 CPUs
+    2 sockets
+    64 cores per socket
+    1 thread per core
+    8 NUMA nodes
+
+Compiler:
+    GCC 8.5.0 20210514
+    Red Hat 8.5.0-20
+
+v15 - Baseline (AX)W
+--------------------
+Measured times:
+    32100.7 us
+    32674.9 us
+    32352.0 us
+    32283.8 us
+    32166.2 us
+
+Median:
+    32283.8 us
+    32.284 ms
+
+Median performance:
+    2.537 GFLOP/s
+
+v16 - Optimized (AX)W
+---------------------
+Measured times:
+    7263.79 us
+    7195.87 us
+    7108.34 us
+    7226.31 us
+    7336.47 us
+
+Median:
+    7226.31 us
+    7.226 ms
+
+Median performance:
+    11.336 GFLOP/s
+
+Improvement over v15:
+    4.468x speedup
+    77.62% lower runtime
+
+v17 - Optimized A(XW)
+---------------------
+Measured times:
+    5753.92 us
+    5744.54 us
+    5736.82 us
+    5779.86 us
+    5635.83 us
+
+Median:
+    5744.54 us
+    5.745 ms
+
+Median performance:
+    12.834 GFLOP/s
+
+Improvement over v15:
+    5.620x speedup
+    82.21% lower runtime
+
+Improvement over v16:
+    1.258x speedup
+    20.51% lower runtime
+
+================================================================
+CROSS-PLATFORM COMPARISON
+================================================================
+
+Median Runtime
+--------------
+                         cs-ssh        Expanse
+v15 baseline             32.369 ms     32.284 ms
+v16 optimized (AX)W       7.886 ms      7.226 ms
+v17 optimized A(XW)       5.187 ms      5.745 ms
+
+Observed Cross-System Behavior
+------------------------------
+v15:
+    Baseline performance is very similar across the two systems.
+    Expanse's median runtime is approximately 0.26% lower.
+
+v16:
+    Expanse is approximately 1.091x faster than cs-ssh.
+    Its median runtime is approximately 8.36% lower.
+
+v17:
+    cs-ssh is approximately 1.107x faster than Expanse.
+    Its median runtime is approximately 9.70% lower.
+
+Therefore, neither architecture is uniformly faster for every
+implementation.
+
+Reassociation
+-------------
+Changing from:
+
+    (A X) W
+
+to:
+
+    A (X W)
+
+improved runtime on BOTH target systems for this matrix shape.
+
+cs-ssh:
+    v17 / v16 speedup = 1.520x
+    runtime reduction = 34.22%
+
+Expanse:
+    v17 / v16 speedup = 1.258x
+    runtime reduction = 20.51%
+
+The optimization therefore transfers across architectures, but the
+magnitude of the benefit is architecture-dependent.
+
+The 10.00% reduction in nominal FLOPs does not by itself explain the
+full measured runtime reduction. Additional effects may include
+memory-access behavior, locality, vectorization behavior, and the
+smaller intermediate matrix in A(XW), but those mechanisms should
+not be claimed as the cause without profiling evidence.
+
+Correctness
+-----------
+v15 and v16 produce byte-for-byte identical output for the complete
+4000 x 64 result matrix.
+
+Verified v15/v16 output SHA-256:
+    8e708a154ae67ca79a153c388526aa1d34e5b08abed998c3a1d87361bf16da29
+
+v17 changes floating-point evaluation order because the matrix
+multiplications are reassociated.
+
+Full v16 versus v17 comparison:
+    Elements checked: 256000
+    Maximum absolute difference: 6.11e-05
+    Maximum relative difference: 7.49260208e-07
+    Tolerance failures: 0
+
+Tolerance:
+    absolute = 1e-4
+    relative = 1e-4
+
+The same numerical agreement was observed on both target systems.
+
+Current Sequential Conclusion
+-----------------------------
+For the tested N=4000, F=128, H=64 regular workload, v17 A(XW) is
+the fastest sequential implementation tested on both cs-ssh and
+Expanse.
+
+This is NOT evidence that A(XW) is universally preferable.
+
+The sparse stage width is F for (AX)W and H for A(XW). Therefore,
+matrix dimensions affect the relative arithmetic and memory work.
+Earlier experiments with reversed feature dimensions also showed
+that the preferred association can change.
+
+A robust final implementation should therefore evaluate association
+choice as a function of matrix dimensions rather than assuming that
+v17 is always optimal.
+
+Limitations / Next Validation
+-----------------------------
+The current benchmark has exactly 16 nonzeros per row.
+
+A graph-convolution application can involve irregular or power-law
+degree distributions. Such a workload may expose substantially
+different:
+
+    - cache behavior
+    - sparse-row work distribution
+    - OpenMP scheduling behavior
+    - load imbalance
+    - scalability
+
+An irregular/power-law workload should therefore be tested before
+drawing conclusions about parallel scheduling or finalizing the
+OpenMP design.
