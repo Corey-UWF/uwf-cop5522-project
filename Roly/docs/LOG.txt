@@ -1,0 +1,1198 @@
+COP 5522 Project Development Log
+
+September 2026
+
+Initial Understanding and Correctness Testing
+---------------------------------------------
+
+- Reviewed the project requirement to compute Y = AXW, where A is sparse
+  and stored in CSR format and X and W are dense matrices.
+
+- Reviewed sparse versus dense matrices and learned how CSR represents a
+  sparse matrix using values[], col_idx[], and row_ptr[].
+
+- Built a small 3 x 3 CSR example and verified how to reconstruct the
+  original matrix from the CSR representation.
+
+- Implemented sparse-dense multiplication for AX and verified the result.
+
+- Added dense matrix W and implemented the complete computation Y = (AX)W.
+
+- Implemented the alternative associative order Y = A(XW).
+
+- Verified that both (AX)W and A(XW) produced the same result for the
+  controlled test case.
+
+- Refactored the demonstration code into reusable sparse-dense,
+  dense-dense, matrix-printing, and verification functions.
+
+- No performance optimizations have been applied yet. The current version
+  is intended to establish correctness and serve as the foundation for
+  the basic sequential implementation.
+
+Dynamic Memory Implementation
+-----------------------------
+
+- Converted dense matrices from fixed-size two-dimensional arrays to
+  dynamically allocated contiguous row-major storage.
+
+- Dynamically allocated the CSR values[], col_idx[], and row_ptr[] arrays.
+
+- Added explicit memory-allocation error checking and proper free() calls.
+
+- Replaced exact floating-point result comparison with a tolerance-based
+  correctness check.
+
+- Compiled with -Wall and -Wextra with no warnings or errors.
+
+- Verified that both (AX)W and A(XW) still produce the same expected result.
+
+- This version remains unoptimized and serves as the known-good dynamic
+  sequential correctness implementation before performance measurements.
+
+
+Initial Sequential Timing Baseline
+----------------------------------
+
+- Added CLOCK_MONOTONIC high-resolution wall-clock timing.
+
+- Added one untimed warm-up followed by five measured repetitions.
+
+- Alternated the execution order of (AX)W and A(XW) between runs to
+  reduce systematic ordering bias.
+
+- Used the median of the five measured total runtimes as the primary
+  comparison metric.
+
+- Synthetic test dimensions:
+      N = 4000
+      F = 128
+      H = 64
+      16 nonzeros per row
+      nnz(A) = 64000
+
+- Compiler configuration:
+      gcc -O0 -Wall -Wextra -Wpedantic -std=c11 project1.c -o project-1 -lm
+
+- Median results:
+      (AX)W = 0.130127 seconds
+      A(XW) = 0.118852 seconds
+
+- A(XW) was 1.095x faster, corresponding to an 8.66 percent lower
+  runtime for this synthetic workload.
+
+- The sparse A*X stage required 0.023028 seconds, while sparse A*(XW)
+  required 0.011841 seconds.
+
+- This result is consistent with H = 64 being half of F = 128.
+  Therefore, A*(XW) processes 64 dense values per nonzero, while
+  A*X processes 128 dense values per nonzero.
+
+- The dense multiplication stages had nearly identical median runtimes:
+      (AX)*W = 0.107100 seconds
+      X*W    = 0.107011 seconds
+
+- Both evaluation orders produced matching results within the specified
+  floating-point tolerance.
+
+- The five measured runs were highly consistent, indicating that the
+  timing experiment was reasonably stable.
+
+- No algorithmic, cache, or parallel optimization has been applied yet.
+  These measurements establish the initial unoptimized sequential
+  timing baseline using compiler optimization level -O0.
+
+Evaluation-Order Reversal Experiment
+------------------------------------
+
+- Tested the hypothesis that reversing the relationship between F and H
+  would reverse which associative evaluation order performs better.
+
+- Previous configuration:
+      F = 128
+      H = 64
+
+  Result:
+      A(XW) was faster.
+
+- New configuration:
+      N = 4000
+      F = 64
+      H = 128
+      16 nonzeros per row
+      nnz(A) = 64000
+
+- Prediction before measurement:
+      (AX)W should become faster because sparse A*X processes only
+      F = 64 dense columns per nonzero, while sparse A*(XW) processes
+      H = 128 dense columns per nonzero.
+
+- Median results:
+      (AX)W = 0.121002 seconds
+      A(XW) = 0.132163 seconds
+
+- (AX)W was 1.092x faster, corresponding to an 8.44 percent lower
+  runtime.
+
+- Sparse multiplication results:
+      A*X     = 0.011837 seconds
+      A*(XW)  = 0.023013 seconds
+
+- The sparse operation across 128 columns took approximately 1.94 times
+  as long as the sparse operation across 64 columns, closely matching
+  the expected increase in sparse work.
+
+- Dense multiplication results:
+      (AX)*W = 0.109164 seconds
+      X*W    = 0.109150 seconds
+
+- The dense stages remained nearly identical because both perform
+  approximately 2*N*F*H floating-point operations.
+
+- The experiment confirmed the prediction: the best evaluation order is
+  dependent on the matrix dimensions rather than being universally fixed.
+
+- Both methods continued to produce matching results within tolerance.
+
+Compiler Optimization Experiment
+--------------------------------
+
+- Evaluated the same sequential source code using compiler optimization
+  levels -O0, -O2, and -O3.
+
+- The algorithm, matrix dimensions, sparse structure, and benchmark
+  procedure were unchanged. Only the compiler optimization level was
+  varied.
+
+- Test configuration:
+      N = 4000
+      F = 128
+      H = 64
+      16 nonzeros per row
+      nnz(A) = 64000
+
+- Median total runtimes:
+
+      -O0:
+          (AX)W = 0.129957 seconds
+          A(XW) = 0.118753 seconds
+
+      -O2:
+          (AX)W = 0.032347 seconds
+          A(XW) = 0.030599 seconds
+
+      -O3:
+          (AX)W = 0.029232 seconds
+          A(XW) = 0.028771 seconds
+
+- Relative to -O0, -O2 improved:
+      (AX)W by approximately 4.02x
+      A(XW) by approximately 3.88x
+
+- Relative to -O0, -O3 improved:
+      (AX)W by approximately 4.45x
+      A(XW) by approximately 4.13x
+
+- Compared with -O2, -O3 reduced total runtime by approximately:
+      9.63 percent for (AX)W
+      5.97 percent for A(XW)
+
+- The sparse-dense kernels benefited especially strongly from -O3.
+
+- The dense X*W kernel changed very little between -O2 and -O3,
+  demonstrating that a higher optimization level does not necessarily
+  improve every individual kernel.
+
+- The advantage of A(XW) decreased as compiler optimization increased:
+      -O0: 8.62 percent lower runtime
+      -O2: 5.41 percent lower runtime
+      -O3: 1.58 percent lower runtime
+
+- This experiment demonstrates that compiler optimization can produce
+  substantial performance gains even when the source algorithm is
+  unchanged.
+
+- For later algorithmic optimization comparisons, the compiler
+  optimization level should remain fixed so that observed speedups can
+  be attributed to source-code changes rather than compiler settings.
+
+GCC Vectorization Analysis
+--------------------------
+
+- Compiled the preserved sequential benchmark using -O3 and GCC's
+  vectorization diagnostic report.
+
+- GCC confirmed that the innermost j loop of sparse_dense_multiply()
+  was vectorized using 16-byte vectors.
+
+- Since each single-precision float occupies 4 bytes, a 16-byte vector
+  can operate on four float values at a time.
+
+- GCC also reported that the sparse loop was versioned for vectorization
+  because of possible memory aliasing.
+
+- This provides direct compiler evidence that SIMD vectorization
+  contributes to the large improvement observed in the sparse-dense
+  kernels at -O3. The entire speedup cannot be attributed to
+  vectorization alone because -O3 performs additional optimizations.
+
+- The naive dense-dense multiplication loop was not successfully
+  vectorized. GCC reported multiple nested loops and a complicated
+  memory-access pattern.
+
+- In the current i-j-k loop ordering, A[i][k] is accessed sequentially
+  as k changes, but B[k][j] moves down a column of row-major matrix B.
+  This produces strided memory access rather than contiguous access.
+
+- This result identifies dense matrix multiplication as a promising
+  target for the next source-code optimization experiment.
+
+- A planned experiment is to test an i-k-j loop ordering, which places
+  j in the innermost loop. This should allow sequential row access to B
+  and may improve spatial locality and compiler vectorization.
+
+Sparse Pointer-Aliasing Experiment
+----------------------------------
+
+- GCC's previous -O3 vectorization report showed that the innermost
+  sparse-dense loop was vectorized using 16-byte SIMD vectors, but GCC
+  also created multiple loop versions because the input and output
+  pointers could potentially alias.
+
+- Tested adding the C restrict qualifier to the CSR arrays, dense input,
+  and output pointers in sparse_dense_multiply().
+
+- The computation and loop structure were otherwise unchanged.
+
+- GCC continued to report successful 16-byte vectorization after the
+  change.
+
+- The previous message stating that the loop was versioned for
+  vectorization because of possible aliasing disappeared. This confirmed
+  that restrict successfully provided stronger non-aliasing information
+  to the compiler.
+
+- A same-session alternating A/B comparison was performed between the
+  original -O3 baseline and the restrict implementation.
+
+- Original -O3 baseline sparse performance was approximately:
+      A*X       = 0.00147 seconds
+      A*(XW)    = 0.000564 seconds
+
+- With restrict, sparse performance was approximately:
+      A*X       = 0.00305 seconds
+      A*(XW)    = 0.00150 seconds
+
+- The restrict implementation was therefore substantially slower in
+  both sparse kernels.
+
+- Total runtime also regressed by approximately:
+      5.4 percent for (AX)W
+      1.7 percent for A(XW)
+
+- The dense multiplication timings remained nearly unchanged, supporting
+  the conclusion that the regression was isolated primarily to the
+  modified sparse kernel.
+
+- Result: restrict simplified the compiler's alias analysis but did not
+  improve performance for this workload. The optimization will therefore
+  not be retained in the best sequential implementation.
+
+- This experiment demonstrates that an optimization that appears
+  beneficial from compiler diagnostics must still be validated by
+  measurement.
+
+Sparse Feature-Blocking Experiment
+----------------------------------
+
+- Investigated feature blocking in the CSR sparse-dense multiplication.
+
+- The original sparse loop processed all dense feature columns for each
+  nonzero entry.
+
+- The blocked implementation instead processed the dense feature
+  dimension in smaller groups while traversing each sparse row.
+
+- Tested feature block sizes:
+      16
+      32
+      64
+      128
+
+- Test configuration:
+      N = 4000
+      F = 128
+      H = 64
+      16 nonzeros per row
+      nnz(A) = 64000
+      compiler optimization = -O3
+
+- All blocked implementations produced correct results matching both
+  associative evaluation orders within tolerance.
+
+- Measured A*X sparse-kernel times:
+      block 16  = 0.001613 seconds
+      block 32  = 0.001315 seconds
+      block 64  = 0.001259 seconds
+      block 128 = 0.001320 seconds
+
+- Block size 64 produced the best initial A*X result.
+
+- A same-session alternating A/B experiment was then performed between
+  the original unblocked implementation and the block-64 version.
+
+- Unblocked A*X median times:
+      0.001479 seconds
+      0.001468 seconds
+
+- Block-64 A*X median times:
+      0.001288 seconds
+      0.001275 seconds
+
+- Averaging the two A/B comparisons:
+      unblocked A*X ≈ 0.0014735 seconds
+      block-64 A*X ≈ 0.0012815 seconds
+
+- Block size 64 reduced A*X runtime by approximately 13 percent,
+  corresponding to roughly a 1.15x sparse-kernel speedup.
+
+- For A*(XW), where the dense feature dimension is only H = 64,
+  block size 64 effectively creates one feature block. Performance
+  remained essentially unchanged relative to the unblocked version.
+
+- The overall application speedup was much smaller than the sparse-kernel
+  improvement because dense matrix multiplication remained the dominant
+  portion of total execution time.
+
+- Result:
+      Feature blocking is beneficial for the K = 128 sparse-dense
+      multiplication in this workload, with block size 64 providing
+      the best tested performance.
+
+- The experiment also demonstrates that blocking effectiveness depends
+  on feature width and block size; smaller blocks introduced additional
+  sparse-row traversals and did not consistently improve performance.
+
+Feature-Blocking Vectorization Analysis
+---------------------------------------
+
+- Generated a GCC -O3 vectorization report for the best tested sparse
+  feature-blocking configuration, FEATURE_BLOCK = 64.
+
+- GCC confirmed that the innermost blocked feature loop was successfully
+  vectorized using 16-byte vectors.
+
+- GCC also continued to version the loop because of possible pointer
+  aliasing.
+
+- This is essentially the same SIMD width and aliasing behavior observed
+  in the original unblocked sparse implementation.
+
+- Therefore, the approximately 13 percent improvement previously measured
+  for A*X cannot be attributed simply to enabling vectorization, because
+  both the blocked and unblocked sparse loops were vectorized.
+
+- The result is consistent with improved loop organization and data
+  locality, potentially combined with other compiler code-generation
+  differences. The vectorization report alone does not prove that cache
+  locality is the sole cause.
+
+- The dense matrix multiplication remained unvectorized because GCC
+  continued to report a complicated memory-access pattern.
+
+Hardware-Counter Follow-Up for Feature Blocking
+-----------------------------------------------
+
+- Used Linux perf as a diagnostic tool to compare the original -O3
+  baseline with the FEATURE_BLOCK=64 implementation.
+
+- Each complete program was measured five times using:
+      cycles
+      instructions
+      cache-references
+      cache-misses
+
+- Baseline whole-program averages:
+      cycles           = 1,334,664,050
+      instructions     = 3,341,650,905
+      cache-references = 1,933,709
+      cache-misses     = 497,284
+      elapsed time     = 0.356116 seconds
+
+- Block-64 whole-program averages:
+      cycles           = 1,329,113,588
+      instructions     = 3,316,074,309
+      cache-references = 1,930,456
+      cache-misses     = 511,560
+      elapsed time     = 0.353935 seconds
+
+- Relative to the baseline, block 64 showed approximately:
+      0.42 percent fewer cycles
+      0.77 percent fewer instructions
+      0.17 percent fewer cache references
+      0.61 percent lower whole-program elapsed time
+
+- Generic cache misses were slightly higher in the block-64 run, and the
+  cache-miss measurements also showed several percent run-to-run
+  variability.
+
+- Therefore, these whole-program hardware counters do not provide
+  evidence that the previously measured sparse-kernel improvement was
+  caused specifically by fewer cache misses.
+
+- The blocked version did execute somewhat fewer instructions, suggesting
+  that compiler code-generation differences may also contribute to its
+  performance.
+
+- Because perf measured the complete application, the approximately
+  13 percent improvement previously observed in the A*X sparse kernel
+  is heavily diluted by the much more expensive dense multiplication
+  stages.
+
+- Conclusion:
+      Feature blocking remains a reproducible sparse-kernel optimization,
+      but the available hardware-counter evidence does not justify
+      attributing the improvement solely to improved cache behavior.
+
+Sparse Feature-Blocking Assembly Analysis
+-----------------------------------------
+
+- A sparse-only microbenchmark was created to isolate A*X from the
+  much more expensive dense multiplication stages.
+
+- Both the unblocked and FEATURE_BLOCK=64 implementations produced
+  identical checksums and passed correctness verification.
+
+- In the repeated sparse-only benchmark, the block-64 implementation
+  was approximately 2.5x faster than the unblocked implementation.
+
+- Linux perf showed approximately:
+      74 percent fewer retired instructions
+      60 percent fewer CPU cycles
+  for block 64 in this repeated sparse-only workload.
+
+- GCC vectorization reports confirmed that both implementations used
+  16-byte SIMD vectors and both retained runtime aliasing-related loop
+  versioning.
+
+- Therefore, the speedup was not caused simply by enabling SIMD,
+  because the original implementation was already vectorized.
+
+- Assembly inspection revealed an important code-generation difference.
+
+- In the original unblocked kernel, GCC retained an inner SIMD loop.
+  Each iteration processed four single-precision values and then
+  executed pointer-update, comparison, and branch instructions.
+
+- With F=128, this vector loop executes 32 iterations per sparse
+  nonzero.
+
+- For FEATURE_BLOCK=64, GCC generated a heavily unrolled sequence for
+  the fixed 64-feature block. Sixteen 4-float SIMD groups are emitted
+  at fixed memory offsets with substantially less inner-loop-control
+  overhead.
+
+- The block-64 sparse function is actually larger in static machine
+  code:
+      unblocked function = 253 bytes
+      block-64 function  = 621 bytes
+
+- However, the larger specialized function executes substantially fewer
+  dynamic instructions, demonstrating that static code size and runtime
+  instruction count are different measures.
+
+- This provides evidence that compiler specialization and loop unrolling
+  are major contributors to the feature-blocking improvement.
+
+- Generic cache-miss measurements were variable and did not provide
+  sufficient evidence to attribute the speedup specifically or solely
+  to fewer cache misses.
+
+- The approximately 2.5x sparse-only microbenchmark result is diagnostic
+  evidence and is not substituted for the normal application benchmark.
+
+- The primary application-level result remains approximately a
+  13 percent reduction in A*X sparse-kernel runtime with block size 64
+  for the tested N=4000, F=128, 16-nonzero-per-row workload.
+
+- Result:
+      FEATURE_BLOCK=64 remains the best tested sparse feature-blocking
+      configuration for this workload and is retained as a candidate
+      optimization for the best sequential implementation.
+
+Sparse Software-Prefetch Experiment
+-----------------------------------
+
+- Tested software prefetching on top of the previously selected
+  FEATURE_BLOCK=64 sparse-dense implementation.
+
+- PREFETCH_DISTANCE controls how many sparse nonzero entries ahead
+  the implementation looks when prefetching the future dense row.
+
+- Tested distances:
+      0
+      1
+      2
+      4
+
+- All configurations produced correct results and both associative
+  evaluation orders continued to match within tolerance.
+
+- Initial A*X results:
+      distance 0 = 0.001259 seconds
+      distance 1 = 0.001185 seconds
+      distance 2 = 0.001137 seconds
+      distance 4 = 0.001133 seconds
+
+- Because distances 2 and 4 were extremely close, a controlled
+  alternating A/B test was performed using distances 0, 2, and 4.
+
+- Controlled A*X results:
+
+      Prefetch 0:
+          0.001263 seconds
+          0.001257 seconds
+          average = 0.001260 seconds
+
+      Prefetch 2:
+          0.001136 seconds
+          0.001138 seconds
+          average = 0.001137 seconds
+
+      Prefetch 4:
+          0.001139 seconds
+          0.001137 seconds
+          average = 0.001138 seconds
+
+- Prefetch distance 2 reduced A*X sparse-kernel runtime by approximately
+  9.8 percent relative to the no-prefetch control.
+
+- Distances 2 and 4 were effectively tied, differing by only about one
+  microsecond in their average measured A*X time.
+
+- Prefetch distance 2 was selected because it achieved the same practical
+  performance as distance 4 while using the less aggressive look-ahead.
+
+- For A*(XW), where K=64, prefetching slightly increased sparse-kernel
+  runtime from approximately 0.000564 seconds to approximately
+  0.000575 seconds.
+
+- Result:
+      FEATURE_BLOCK=64 with PREFETCH_DISTANCE=2 is retained as the
+      current best sparse-kernel candidate for the tested workload.
+
+- The experiment demonstrates that software prefetching can help the
+  larger K=128 sparse-dense multiplication, but its benefit depends on
+  the feature width and prefetch distance.
+
+Dense Matrix Loop-Order Optimization
+------------------------------------
+
+- Investigated loop ordering for the dense matrix multiplication.
+
+- The original implementation used:
+      i -> j -> k
+
+- In row-major storage, the innermost k loop accesses B[k][j].
+  This moves down a column of B and therefore uses a strided memory
+  access pattern.
+
+- The candidate implementation changed the loop order to:
+      i -> k -> j
+
+- With j innermost, both B[k][j] and C[i][j] are traversed
+  contiguously in row-major memory.
+
+- The current best sparse settings were held constant:
+      FEATURE_BLOCK = 64
+      PREFETCH_DISTANCE = 2
+
+- A controlled alternating A/B comparison was performed between
+  the i-j-k and i-k-j dense implementations.
+
+- Average dense-stage results from the controlled runs:
+
+      (AX)*W:
+          i-j-k = 0.027782 seconds
+          i-k-j = 0.003385 seconds
+          approximately 8.21x faster
+
+      X*W:
+          i-j-k = 0.028262 seconds
+          i-k-j = 0.003251 seconds
+          approximately 8.69x faster
+
+- Dense-kernel runtime was reduced by approximately 88 percent.
+
+- Average total method results:
+
+      Method 1, (AX)W:
+          i-j-k = 0.028918 seconds
+          i-k-j = 0.004525 seconds
+          approximately 6.39x faster overall
+
+      Method 2, A(XW):
+          i-j-k = 0.028846 seconds
+          i-k-j = 0.003827 seconds
+          approximately 7.54x faster overall
+
+- Sparse-kernel timings remained essentially unchanged, supporting
+  the conclusion that the measured improvement came from the dense
+  loop-order change.
+
+- All runs passed correctness verification.
+
+- Result:
+      The i-k-j dense loop order is retained as the current best
+      dense-matrix implementation.
+
+- The next step is to inspect GCC vectorization diagnostics to
+  determine whether improved SIMD generation also contributed to
+  the observed speedup.
+
+Dense Loop-Order Vectorization Analysis
+---------------------------------------
+
+- Generated GCC -O3 vectorization reports for both dense loop orders.
+
+- For the original i-j-k implementation, GCC reported that the dense
+  loops could not be vectorized because of the complicated memory
+  access pattern.
+
+- In row-major storage, the innermost k loop accesses B[k][j], which
+  moves through B with a row-sized stride rather than through
+  contiguous elements.
+
+- For the optimized i-k-j implementation, GCC successfully vectorized
+  the innermost j loop using 16-byte vectors.
+
+- A 16-byte SIMD vector contains four single-precision float values.
+
+- The optimized j loop traverses both B[k][j] and C[i][j]
+  contiguously in memory.
+
+- GCC continued to use runtime loop versioning because of possible
+  pointer aliasing.
+
+- The compiler report therefore confirms that the loop-order change
+  both improves the row-major memory-access pattern and enables SIMD
+  vectorization of the dense inner loop.
+
+- This provides compiler evidence supporting the approximately
+  8x to 9x dense-kernel speedup measured in the controlled A/B tests.
+
+- The speedup should be attributed to the combination of improved
+  memory locality and successful vectorization; the current experiment
+  does not isolate the contribution of either effect individually.
+
+- Result:
+      i-k-j is retained as the best tested dense loop order.
+
+Sequential Optimization Milestone
+---------------------------------
+
+- Preserved the current best sequential benchmark source as:
+
+      project1_best_sequential_v11.c
+
+- The source was copied directly from project1_dense_ikj_v10.c.
+
+- SHA-256 verification confirmed that the two source files were
+  identical at the time the checkpoint was created.
+
+- Current best sequential configuration:
+
+      Sparse representation:
+          CSR
+
+      Sparse optimizations:
+          FEATURE_BLOCK = 64
+          PREFETCH_DISTANCE = 2
+
+      Dense optimization:
+          i -> k -> j loop order
+
+      Compiler:
+          gcc -O3
+
+- The original preserved sequential benchmark and the current best
+  sequential candidate were recompiled and compared in the same
+  session using an alternating A/B test.
+
+- Original -O3 Method 1, (AX)W:
+      0.029254 seconds
+      0.029279 seconds
+      average = 0.0292665 seconds
+
+- Best sequential Method 1, (AX)W:
+      0.004518 seconds
+      0.004523 seconds
+      average = 0.0045205 seconds
+
+- Method 1 cumulative speedup:
+      approximately 6.47x
+
+- Method 1 runtime reduction:
+      approximately 84.55 percent
+
+
+- Original -O3 Method 2, A(XW):
+      0.028895 seconds
+      0.028817 seconds
+      average = 0.028856 seconds
+
+- Best sequential Method 2, A(XW):
+      0.003818 seconds
+      0.003822 seconds
+      average = 0.003820 seconds
+
+- Method 2 cumulative speedup:
+      approximately 7.55x
+
+- Method 2 runtime reduction:
+      approximately 86.76 percent
+
+
+- Average A*X sparse-kernel time improved from approximately
+  0.001474 seconds to 0.001137 seconds, a reduction of approximately
+  22.9 percent.
+
+- Average (AX)*W dense-kernel time improved from approximately
+  0.027780 seconds to 0.003384 seconds, approximately 8.21x faster.
+
+- Average X*W dense-kernel time improved from approximately
+  0.028275 seconds to 0.003248 seconds, approximately 8.71x faster.
+
+- All final comparison runs passed correctness verification.
+
+- A(XW) is currently the fastest associative evaluation order for
+  this tested workload after the sequential optimizations.
+
+- This file is the current best sequential PERFORMANCE BENCHMARK
+  checkpoint. It is not yet the final project-2 submission program,
+  because the final assignment input-file interface still needs to
+  be integrated with the optimized kernels.
+
+- Next validation stage:
+      reproduce the baseline and optimized results on cs-ssh before
+      testing the candidate on HPC compute nodes.
+
+Bridges-2 Sequential Validation
+-------------------------------
+
+- Sequential validation was performed on Bridges-2 using dedicated
+  Regular Memory (RM) compute nodes.
+
+- Compute architecture:
+      AMD EPYC 7742 64-Core Processor
+      2 sockets
+      64 physical cores per socket
+      128 physical cores per node
+
+- GCC 8.5.0 was used for the initial validation.
+
+- The official baseline-versus-optimized comparison was executed as
+  a SLURM batch job on one dedicated RM node.
+
+- Each sequential executable was run with one CPU and core binding.
+
+- The controlled order was:
+      original
+      optimized
+      optimized
+      original
+
+- All four runs passed correctness verification.
+
+- Average median original runtimes:
+
+      (AX)W:
+          approximately 0.029821 seconds
+
+      A(XW):
+          approximately 0.029101 seconds
+
+- Average median optimized runtimes using the VM-selected
+  FEATURE_BLOCK=64 and PREFETCH_DISTANCE=2 configuration:
+
+      (AX)W:
+          approximately 0.004766 seconds
+
+      A(XW):
+          approximately 0.003813 seconds
+
+- Resulting overall speedups were approximately:
+
+      (AX)W:
+          6.26x
+
+      A(XW):
+          7.63x
+
+- Dense multiplication improved from approximately 0.02864 seconds
+  to approximately 0.003335 seconds, or about 8.6x.
+
+- This confirms that the dense i-k-j loop-order optimization
+  generalizes strongly to the AMD EPYC architecture.
+
+
+Bridges-2 Sparse Parameter Sweep
+--------------------------------
+
+- A small sparse-parameter sweep was performed on a dedicated RM node
+  while keeping the optimized i-k-j dense multiplication.
+
+- Results for A*X:
+
+      Original CSR sparse kernel:
+          0.001154 seconds
+
+      FEATURE_BLOCK=64, PREFETCH_DISTANCE=2:
+          0.001413 seconds
+
+      FEATURE_BLOCK=64, PREFETCH_DISTANCE=0:
+          0.002168 seconds
+
+      FEATURE_BLOCK=128, PREFETCH_DISTANCE=0:
+          0.001157 seconds
+
+- Block 128 with no software prefetch was effectively tied with the
+  original sparse kernel for A*X. The difference was approximately
+  0.26 percent.
+
+- For A*(XW), the measured sparse times were:
+
+      Original CSR:
+          0.000461 seconds
+
+      Block 64 / prefetch 2:
+          0.000472 seconds
+
+      Block 64 / prefetch 0:
+          0.000465 seconds
+
+      Block 128 / prefetch 0:
+          0.000456 seconds
+
+- Block 64 without prefetch performed particularly poorly for A*X
+  on this AMD EPYC system.
+
+- These results provide additional evidence that sparse feature
+  blocking and software-prefetch behavior are architecture and
+  compiler dependent.
+
+- Cross-platform interpretation:
+
+      Dense i-k-j:
+          consistently successful and retained as a portable
+          sequential optimization.
+
+      Sparse block 64 / prefetch 2:
+          effective on the COP5522 Linux VM but not portable across
+          all tested systems.
+
+      Sparse block 128 / prefetch 0:
+          currently the strongest portable sparse candidate because
+          it performed well on the VM and cs-ssh and was essentially
+          tied with the original sparse kernel on Bridges-2.
+
+- Result:
+      Bridges-2 sequential characterization is complete.
+
+      The next architecture to validate is SDSC Expanse.
+
+Expanse Sequential Validation
+-----------------------------
+
+- Sequential validation was performed on SDSC Expanse.
+
+- Project/account:
+      fsu125
+
+- Compute architecture:
+      AMD EPYC 7742 64-Core Processor
+      2 sockets
+      64 physical cores per socket
+      128 physical cores per node
+
+- GCC 8.5.0 was used for the initial validation.
+
+- Correctness was first verified on the shared partition.
+
+- Official timing was performed using a node-exclusive compute job
+  running from Expanse Lustre scratch storage.
+
+- Each sequential run used one CPU with explicit core binding.
+
+- The controlled A/B order was:
+      original
+      optimized
+      optimized
+      original
+
+- All official timing runs passed correctness verification.
+
+- Average median original runtimes:
+
+      (AX)W:
+          approximately 0.028295 seconds
+
+      A(XW):
+          approximately 0.027760 seconds
+
+- Average median optimized runtimes using the VM-selected
+  FEATURE_BLOCK=64 and PREFETCH_DISTANCE=2 configuration:
+
+      (AX)W:
+          approximately 0.004460 seconds
+
+      A(XW):
+          approximately 0.003670 seconds
+
+- Resulting overall speedups:
+
+      (AX)W:
+          approximately 6.34x
+
+      A(XW):
+          approximately 7.56x
+
+- Dense multiplication improved by approximately 8.5x.
+
+- Dense-kernel runtime was reduced by approximately 88.2 percent.
+
+- This independently confirms that the dense i-k-j optimization
+  generalizes strongly to Expanse.
+
+
+Expanse Sparse Parameter Sweep
+------------------------------
+
+- A sparse-parameter sweep was performed on an Expanse compute node.
+
+- A*X results:
+
+      Original CSR sparse kernel:
+          0.001010 seconds
+
+      FEATURE_BLOCK=64, PREFETCH_DISTANCE=2:
+          0.001252 seconds
+
+      FEATURE_BLOCK=64, PREFETCH_DISTANCE=0:
+          0.002061 seconds
+
+      FEATURE_BLOCK=128, PREFETCH_DISTANCE=0:
+          0.001025 seconds
+
+- Block 128 with no prefetch was approximately 1.5 percent slower
+  than the original CSR sparse kernel for A*X, which is a very small
+  difference at this timing scale.
+
+- Block 64 with prefetch distance 2 was approximately 24 percent
+  slower than the original A*X sparse kernel.
+
+- Block 64 without prefetch was more than twice as slow as the
+  original A*X sparse kernel.
+
+- A*(XW) results were all very close:
+
+      Original CSR:
+          0.000444 seconds
+
+      Block 64 / prefetch 2:
+          0.000455 seconds
+
+      Block 64 / prefetch 0:
+          0.000441 seconds
+
+      Block 128 / prefetch 0:
+          0.000446 seconds
+
+- These results again demonstrate that sparse blocking and software
+  prefetching are architecture-dependent optimizations.
+
+- Cross-platform conclusion:
+
+      Dense i-k-j:
+          strongly successful on the COP5522 Linux VM, cs-ssh,
+          Bridges-2, and Expanse.
+
+      Sparse block 64 / prefetch 2:
+          beneficial on the development VM but not portable.
+
+      Sparse block 128 / prefetch 0:
+          the strongest tested portable blocked configuration, although
+          it is effectively tied with the original CSR loop on the
+          AMD EPYC systems.
+
+- Result:
+      Cross-platform sequential validation is complete.
+
+      The next step is to choose and freeze the portable sequential
+      implementation before moving to OpenMP work.
+
+Portable Sequential Configuration Freeze
+----------------------------------------
+
+- Cross-platform sequential tuning is now complete.
+
+- The final portable sequential benchmark configuration is:
+
+      FEATURE_BLOCK=128
+      PREFETCH_DISTANCE=0
+      DENSE_IKJ=1
+
+- Source:
+      project1_portable_sequential_v12.c
+
+- The source was derived directly from
+  project1_best_sequential_v11.c.
+
+- The only configuration changes from v11 were:
+
+      FEATURE_BLOCK:
+          64 -> 128
+
+      PREFETCH_DISTANCE:
+          2 -> 0
+
+- The dense i-k-j optimization was retained unchanged.
+
+- The source compiled successfully with:
+
+      gcc -O3 -Wall -Wextra -Wpedantic -std=c11
+
+  with no compiler warnings.
+
+- Final correctness verification passed:
+
+      Verification: BOTH METHODS MATCH within tolerance.
+
+
+Final Linux VM Controlled A/B Validation
+----------------------------------------
+
+- Final comparison order:
+
+      original
+      portable v12
+      portable v12
+      original
+
+- Each executable internally used one warm-up run followed by
+  five measured runs and reported median timings.
+
+- All four executions passed correctness verification.
+
+- Average original median timings:
+
+      (AX)W:
+          0.029265 seconds
+
+      A(XW):
+          0.0288085 seconds
+
+- Average portable-v12 median timings:
+
+      (AX)W:
+          0.0048325 seconds
+
+      A(XW):
+          0.0038105 seconds
+
+- Overall speedup:
+
+      (AX)W:
+          approximately 6.06x
+
+      A(XW):
+          approximately 7.56x
+
+- Overall runtime reduction:
+
+      (AX)W:
+          approximately 83.49 percent
+
+      A(XW):
+          approximately 86.77 percent
+
+- Sparse A*X:
+
+      Original:
+          0.001475 seconds
+
+      Portable v12:
+          0.001449 seconds
+
+      Result:
+          approximately 1.76 percent faster than the original
+          sparse kernel on the development VM.
+
+- Dense (AX)*W:
+
+      Original:
+          0.027783 seconds
+
+      Portable v12:
+          0.003386 seconds
+
+      Result:
+          approximately 8.21x faster.
+
+- Dense X*W:
+
+      Original:
+          0.028244 seconds
+
+      Portable v12:
+          0.003245 seconds
+
+      Result:
+          approximately 8.70x faster.
+
+- Sparse A*(XW) remained essentially unchanged.
+
+- Interpretation:
+
+      The dominant portable optimization is the dense i-k-j
+      loop reordering.
+
+      Sparse blocking and software prefetching were much more
+      architecture dependent.
+
+      FEATURE_BLOCK=128 with PREFETCH_DISTANCE=0 was selected as
+      the portable blocked sparse configuration because it behaved
+      consistently across the tested systems while avoiding the
+      regressions observed with block64 on the AMD EPYC systems.
+
+- The portable sequential benchmark/reference implementation is
+  now frozen.
+
+- This file is not yet the final project-2 submission program.
+  The final assignment input-file interface still needs to be
+  integrated. The frozen kernels should be transplanted into that
+  interface without reopening the completed sequential tuning phase.
+
+Frozen Sequential Checksum Record
+---------------------------------
+
+- Frozen source SHA-256:
+
+      2deda5af6e3c95efa72e363d8812fcaabfaa757b8544f4fbd1c0341da16ce627
+      project1_portable_sequential_v12.c
+
+- Linux VM reference binary SHA-256:
+
+      b4aa9ae29e9c5e62d2731300417fd295f9cf8646f0d8d76496fc48ec02e29440
+      project-1-portable-sequential-v12
+
+- Checksum file:
+
+      project1_portable_sequential_v12.sha256
+
+- The source hash is the authoritative identifier for the frozen
+  portable sequential implementation.
+
+- Binary hashes compiled independently on other systems are not
+  expected to match because compiler versions and system toolchains
+  may differ.
