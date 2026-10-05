@@ -10,21 +10,31 @@ work by nonzero count or compare the alternate multiplication order `A (X W)`.
 
 ### Build and run
 
-Build with an MPI C compiler:
+Build with an MPI C compiler. The starter accepts the same four-file command
+line and matrix encodings as Rolando's sequential versions:
 
 ```sh
 make
-mpirun -np 4 ./mpi-baseline A_file X_file W_file
+mpirun -np 4 ./mpi-baseline A.csr X.dense W.dense Y.dense
 ```
 
-The current input and output encodings are provisional until the course reference
-files and required output format are available:
+The files contain whitespace-separated text values:
 
-- `A_file`: `N nnz`, followed by `N+1` zero-based CSR row pointers, `nnz`
-  zero-based column indices, then `nnz` values.
-- `X_file` and `W_file`: `rows columns`, followed by row-major values.
-- Standard output: `N H`, followed by the `N x H` result in row-major order.
+- `A.csr`: `rows columns nnz`, followed by `rows+1` zero-based CSR row
+  pointers, `nnz` zero-based column indices, then `nnz` single-precision values.
+- `X.dense` and `W.dense`: `rows columns`, followed by row-major values.
+- `Y.dense`: `rows columns`, followed by row-major values.
 
-Values are whitespace-separated text numbers. The implementation expects
-`A` to be `N x N`, `X` to be `N x F`, and `W` to be `F x H`. Update the
-provisional readers and output writer once the official file format is confirmed.
+The implementation expects `A` to be `N x N`, `X` to be `N x F`, and `W` to
+be `F x H`. It computes `(A X) W`, uses contiguous equal-row partitions, and
+replicates `X` and `W` on all ranks. The output is written by rank 0; elapsed
+distributed time is printed separately to standard output.
+
+### Current limitations and next steps
+
+This is a basic correctness-oriented MPI version, not the final optimized
+parallel program. Validate its output against the sequential reference first.
+Then compare the current equal-row partition with one balanced by CSR nonzero
+counts, and measure multiple process counts on multiple nodes. The current
+timing includes MPI distribution, multiplication, and output gathering, but
+excludes input-file reading and writing.

@@ -1,0 +1,68 @@
+2026-10-05 - MPI baseline correctness milestone
+------------------------------------------------------------
+Goal:
+Verify Y = (A X) W on a tiny known-answer input before larger-input
+validation and performance experiments.
+
+Environment:
+PSC Bridges-2, compute node r165, one-node interactive allocation.
+Compiler/MPI modules recommended during setup:
+gcc/10.2.0 and openmpi/4.0.5-gcc10.2.0.
+The loaded module list and compiler version were not captured in the
+reported test output.
+
+Implementation:
+mpi_baseline.c, contiguous equal-row partitions, replicated X and W,
+single-precision computation, output gathered to rank 0.
+
+Inputs:
+A: 3 x 3, 4 nonzeros
+  row pointers:   0 2 2 4
+  column indices: 0 2 1 2
+  values:         1 2 3 4
+X: 3 x 2
+  1 2
+  3 4
+  5 6
+W: 2 x 2
+  1 2
+  3 4
+
+Commands:
+mpirun -np 1 ./mpi-baseline tiny-A.csr tiny-X.dense tiny-W.dense Y-mpi-1.dense
+mpirun -np 2 ./mpi-baseline tiny-A.csr tiny-X.dense tiny-W.dense Y-mpi-2.dense
+mpirun -np 4 ./mpi-baseline tiny-A.csr tiny-X.dense tiny-W.dense Y-mpi-4.dense
+
+Expected and observed output for all three process counts:
+3 2
+53 78
+0 0
+137 202
+
+Evidence:
+Zack supplied server terminal output showing the result files for
+1, 2, and 4 ranks. All displayed matrices matched the known answer.
+No automated diff or larger-input numerical comparison was reported.
+
+Reported elapsed times:
+1 rank:  not captured in the supplied terminal output
+2 ranks: 0.001419 seconds
+4 ranks: 0.001144 seconds
+
+Conclusion:
+The baseline passed this one-node, known-answer correctness test.
+The case exercises an empty sparse row, uneven row distribution,
+and a rank receiving zero rows when four ranks process three rows.
+These tiny-input times are not meaningful evidence of speedup.
+Larger-input and multi-node correctness/scalability remain unverified.
+
+AI interaction:
+The assistant proposed the tiny CSR/dense inputs, calculated the
+expected result, and suggested checking 1, 2, and 4 ranks. Zack ran
+the tests on Bridges-2 and provided the observed outputs.
+
+Next steps:
+Compare against Rolando's sequential implementation on shared larger
+inputs using numerical tolerances. Collect repeated timings with
+clearly defined boundaries, then investigate nonzero-balanced
+partitioning on irregular/power-law inputs and multiple nodes.

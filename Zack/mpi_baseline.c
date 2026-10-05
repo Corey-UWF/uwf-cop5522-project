@@ -10,13 +10,13 @@ typedef struct {
     int nnz;
     int *row_ptr;
     int *col_idx;
-    double *values;
+    float *values;
 } CsrMatrix;
 
 typedef struct {
     int rows;
     int cols;
-    double *values;
+    float *values;
 } DenseMatrix;
 
 static void *allocate_array(size_t count, size_t element_size)
@@ -51,13 +51,17 @@ static int load_csr(const char *path, CsrMatrix *matrix)
         return 0;
     }
 
-    int ok = fscanf(file, "%d %d", &matrix->n, &matrix->nnz) == 2 &&
-             matrix->n > 0 && matrix->nnz >= 0;
+    int rows;
+    int cols;
+    int ok = fscanf(file, "%d %d %d", &rows, &cols, &matrix->nnz) == 3 &&
+             rows > 0 && cols > 0 && rows == cols && matrix->nnz >= 0;
     if (!ok) {
-        fprintf(stderr, "Invalid CSR header in %s (expected: rows nnz)\n", path);
+        fprintf(stderr, "Invalid CSR header in %s (expected: rows columns nnz; A must be square)\n",
+                path);
         fclose(file);
         return 0;
     }
+    matrix->n = rows;
 
     matrix->row_ptr = allocate_array((size_t)matrix->n + 1, sizeof(*matrix->row_ptr));
     matrix->col_idx = allocate_array((size_t)matrix->nnz, sizeof(*matrix->col_idx));
@@ -81,7 +85,7 @@ static int load_csr(const char *path, CsrMatrix *matrix)
              matrix->col_idx[i] >= 0 && matrix->col_idx[i] < matrix->n;
     }
     for (int i = 0; i < matrix->nnz && ok; ++i) {
-        ok = fscanf(file, "%lf", &matrix->values[i]) == 1;
+        ok = fscanf(file, "%f", &matrix->values[i]) == 1;
     }
 
     if (!ok) {
@@ -123,13 +127,38 @@ static int load_dense(const char *path, DenseMatrix *matrix)
     }
 
     for (size_t i = 0; i < elements && ok; ++i) {
-        ok = fscanf(file, "%lf", &matrix->values[i]) == 1;
+        ok = fscanf(file, "%f", &matrix->values[i]) == 1;
     }
     if (!ok) {
         fprintf(stderr, "Invalid dense matrix data in %s\n", path);
     }
     fclose(file);
     return ok;
+}
+
+static void write_dense(const char *path, const float *values, int rows, int cols)
+{
+    FILE *file = fopen(path, "w");
+    if (file == NULL) {
+        fprintf(stderr, "Cannot open output file %s\n", path);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
+
+    fprintf(file, "%d %d\n", rows, cols);
+    for (int row = 0; row < rows; ++row) {
+        for (int col = 0; col < cols; ++col) {
+            if (col > 0) {
+                fputc(' ', file);
+            }
+            fprintf(file, "%.9g", values[(size_t)row * (size_t)cols +
+                                         (size_t)col]);
+        }
+        fputc('\n', file);
+    }
+    if (fclose(file) != 0) {
+        fprintf(stderr, "Failed to finish writing output file %s\n", path);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
 }
 
 static void abort_on_allocation_failure(int rank, const char *what)
@@ -147,9 +176,9 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &process_count);
 
-    if (argc != 4) {
+    if (argc != 5) {
         if (rank == 0) {
-            fprintf(stderr, "Usage: %s A_file X_file W_file\n", argv[0]);
+            fprintf(stderr, "Usage: %s A.csr X.dense W.dense Y.dense\n", argv[0]);
         }
         MPI_Finalize();
         return EXIT_FAILURE;
@@ -224,15 +253,17 @@ int main(int argc, char **argv)
 
     int local_rows = row_counts[rank];
     int local_nnz = 0;
+    MPI_Barrier(MPI_COMM_WORLD);
+    double start_time = MPI_Wtime();
     MPI_Scatter(nnz_counts, 1, MPI_INT, &local_nnz, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
     int *local_row_lengths = allocate_array((size_t)local_rows, sizeof(*local_row_lengths));
     int *local_row_ptr = allocate_array((size_t)local_rows + 1, sizeof(*local_row_ptr));
     int *local_col_idx = allocate_array((size_t)local_nnz, sizeof(*local_col_idx));
-    double *local_values = allocate_array((size_t)local_nnz, sizeof(*local_values));
-    double *local_ax =
+    float *local_values = allocate_array((size_t)local_nnz, sizeof(*local_values));
+    float *local_ax =
         allocate_array((size_t)local_rows * (size_t)features, sizeof(*local_ax));
-    double *local_y =
+    float *local_y =
         allocate_array((size_t)local_rows * (size_t)hidden, sizeof(*local_y));
     if (local_row_lengths == NULL || local_row_ptr == NULL ||
         local_col_idx == NULL || local_values == NULL ||
@@ -266,13 +297,13 @@ int main(int argc, char **argv)
 
     MPI_Scatterv(a.col_idx, nnz_counts, nnz_displacements, MPI_INT,
                  local_col_idx, local_nnz, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Scatterv(a.values, nnz_counts, nnz_displacements, MPI_DOUBLE,
-                 local_values, local_nnz, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Scatterv(a.values, nnz_counts, nnz_displacements, MPI_FLOAT,
+                 local_values, local_nnz, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
     size_t x_elements = (size_t)n * (size_t)features;
     size_t w_elements = (size_t)features * (size_t)hidden;
-    double *x_values = allocate_array(x_elements, sizeof(*x_values));
-    double *w_values = allocate_array(w_elements, sizeof(*w_values));
+    float *x_values = allocate_array(x_elements, sizeof(*x_values));
+    float *w_values = allocate_array(w_elements, sizeof(*w_values));
     if (x_values == NULL || w_values == NULL) {
         abort_on_allocation_failure(rank, "replicated dense inputs");
     }
@@ -284,25 +315,25 @@ int main(int argc, char **argv)
             w_values[i] = w.values[i];
         }
     }
-    MPI_Bcast(x_values, (int)x_elements, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Bcast(w_values, (int)w_elements, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(x_values, (int)x_elements, MPI_FLOAT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(w_values, (int)w_elements, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
     for (int local_row = 0; local_row < local_rows; ++local_row) {
-        double *ax_row = &local_ax[(size_t)local_row * (size_t)features];
+        float *ax_row = &local_ax[(size_t)local_row * (size_t)features];
         for (int entry = local_row_ptr[local_row];
              entry < local_row_ptr[local_row + 1]; ++entry) {
-            const double value = local_values[entry];
-            const double *x_row =
+            const float value = local_values[entry];
+            const float *x_row =
                 &x_values[(size_t)local_col_idx[entry] * (size_t)features];
             for (int feature = 0; feature < features; ++feature) {
                 ax_row[feature] += value * x_row[feature];
             }
         }
 
-        double *y_row = &local_y[(size_t)local_row * (size_t)hidden];
+        float *y_row = &local_y[(size_t)local_row * (size_t)hidden];
         for (int feature = 0; feature < features; ++feature) {
-            const double value = ax_row[feature];
-            const double *w_row =
+            const float value = ax_row[feature];
+            const float *w_row =
                 &w_values[(size_t)feature * (size_t)hidden];
             for (int column = 0; column < hidden; ++column) {
                 y_row[column] += value * w_row[column];
@@ -312,7 +343,7 @@ int main(int argc, char **argv)
 
     int *gather_counts = NULL;
     int *gather_displacements = NULL;
-    double *global_output = NULL;
+    float *global_output = NULL;
     if (rank == 0) {
         gather_counts = allocate_array((size_t)process_count, sizeof(*gather_counts));
         gather_displacements =
@@ -328,19 +359,18 @@ int main(int argc, char **argv)
             gather_displacements[p] = row_displacements[p] * hidden;
         }
     }
-    MPI_Gatherv(local_y, local_rows * hidden, MPI_DOUBLE,
-                global_output, gather_counts, gather_displacements, MPI_DOUBLE,
+    MPI_Gatherv(local_y, local_rows * hidden, MPI_FLOAT,
+                global_output, gather_counts, gather_displacements, MPI_FLOAT,
                 0, MPI_COMM_WORLD);
 
+    double local_elapsed = MPI_Wtime() - start_time;
+    double elapsed = 0.0;
+    MPI_Reduce(&local_elapsed, &elapsed, 1, MPI_DOUBLE, MPI_MAX, 0,
+               MPI_COMM_WORLD);
+
     if (rank == 0) {
-        printf("%d %d\n", n, hidden);
-        for (int row = 0; row < n; ++row) {
-            for (int column = 0; column < hidden; ++column) {
-                printf("%.17g%c", global_output[(size_t)row * (size_t)hidden +
-                                                (size_t)column],
-                       column + 1 == hidden ? '\n' : ' ');
-            }
-        }
+        write_dense(argv[4], global_output, n, hidden);
+        printf("MPI elapsed time = %.6f seconds\n", elapsed);
     }
 
     free_csr(&a);
