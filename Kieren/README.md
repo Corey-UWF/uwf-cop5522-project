@@ -1,8 +1,6 @@
 # Kieren's Additions
 # Performance Benchmarking and Experimental Analysis
 
-**Contributor: Kieren Gregory**
-
 My contribution will focus on benchmarking and analyzing the performance of the sequential, OpenMP, and MPI implementations. Since power-law graphs contain a small number of highly connected vertices and many vertices with relatively few connections, the amount of work between sparse matrix rows can vary significantly. This can create challenges involving load imbalance, irregular memory access, cache locality, and parallel scalability.
 
 ## Benchmarking Methodology
