@@ -1,0 +1,1404 @@
+{
+  "input": {
+    "N": 4000,
+    "F": 128,
+    "H": 64,
+    "nnz": 64000,
+    "seed": 5522,
+    "regular_degree": 16,
+    "irregular_zero_rows": 80,
+    "irregular_median_degree": 5.0,
+    "irregular_p90_degree": 21,
+    "irregular_p99_degree": 180,
+    "irregular_max_degree": 4000
+  },
+  "input_sha256": {
+    "regular-A.csr": "c35536648d8c8c703f7a9194b44aa0197ba13f31d913712ce9be338d7ff16b4a",
+    "X.dense": "ada695a169178aa9edc438ed68060426b062f2393bbd6caf5b2533b1b896c8a6",
+    "W.dense": "26fbceb587cdd034270b45974a0b79824f5b7a61250ea60da42800bd516f5d86",
+    "irregular-A.csr": "36858b28a3d9b3667aa920767f57ccb5eb57becdd9ff214a693560d56c8fe83d"
+  },
+  "source_sha256": {
+    "v21": "d06dfafef6c9465cdfb86d0f75b7434b05614209c94ccdc6d67d27d79514769a",
+    "openmp_v21": "adb78557fb54b329378ac2b1076467481744d5d192284fd23bbd9a15e863c1d1"
+  },
+  "machine": {
+    "hostname": "0ddfde7cfc8d",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "scheduler_job_id": null,
+    "scheduler_node_list": null
+  },
+  "protocol": {
+    "runs": 5,
+    "warmups": 1,
+    "threads": [
+      1,
+      2,
+      4
+    ],
+    "schedules": [
+      "static",
+      "dynamic",
+      "guided"
+    ],
+    "blas_library": "/lib/x86_64-linux-gnu/libblas.so.3",
+    "openblas_threads": 1,
+    "timing": "dense serial BLAS plus OpenMP sparse rows; file I/O excluded",
+    "speedup_baseline": "one-thread median of each schedule"
+  },
+  "correctness": {
+    "regular_static_1": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "regular_static_2": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "regular_static_4": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "regular_dynamic_1": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "regular_dynamic_2": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "regular_dynamic_4": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "regular_guided_1": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "regular_guided_2": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "regular_guided_4": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "irregular_static_1": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "irregular_static_2": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "irregular_static_4": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "irregular_dynamic_1": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "irregular_dynamic_2": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "irregular_dynamic_4": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "irregular_guided_1": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "irregular_guided_2": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "irregular_guided_4": {
+      "elements": 256000,
+      "failures": 0,
+      "max_absolute_error": 0.0,
+      "atol": 0.0001,
+      "rtol": 0.0001
+    }
+  },
+  "raw_runs": [
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 1,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.012833299999999999,
+      "dense_seconds": 0.011719933,
+      "sparse_seconds": 0.00111292
+    },
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 2,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.014866399999999998,
+      "dense_seconds": 0.013706640999999999,
+      "sparse_seconds": 0.001159519
+    },
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 4,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.012059899999999998,
+      "dense_seconds": 0.01127711,
+      "sparse_seconds": 0.0007824539999999999
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 1,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.0147187,
+      "dense_seconds": 0.013625402,
+      "sparse_seconds": 0.001092931
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 2,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.016072,
+      "dense_seconds": 0.014946517999999999,
+      "sparse_seconds": 0.001124797
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 4,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.012867700000000001,
+      "dense_seconds": 0.011718751,
+      "sparse_seconds": 0.001148693
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 1,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.0151998,
+      "dense_seconds": 0.012808538,
+      "sparse_seconds": 0.002390944
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 2,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.013073399999999999,
+      "dense_seconds": 0.011984281999999999,
+      "sparse_seconds": 0.001088885
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 4,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.0119937,
+      "dense_seconds": 0.011235118,
+      "sparse_seconds": 0.000757897
+    },
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 2,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.0125554,
+      "dense_seconds": 0.011488763,
+      "sparse_seconds": 0.0010662909999999998
+    },
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 4,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.0137621,
+      "dense_seconds": 0.012951577999999998,
+      "sparse_seconds": 0.0008101839999999999
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 1,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.0135011,
+      "dense_seconds": 0.012348238999999999,
+      "sparse_seconds": 0.0011526289999999998
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 2,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.0127158,
+      "dense_seconds": 0.011509933,
+      "sparse_seconds": 0.001205166
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 4,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.013569,
+      "dense_seconds": 0.012345804,
+      "sparse_seconds": 0.001222972
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 1,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.012662399999999999,
+      "dense_seconds": 0.01139866,
+      "sparse_seconds": 0.001263332
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 2,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.0129319,
+      "dense_seconds": 0.011821833,
+      "sparse_seconds": 0.001109676
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 4,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.013342399999999999,
+      "dense_seconds": 0.012396981,
+      "sparse_seconds": 0.0009451029999999999
+    },
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 1,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.0232605,
+      "dense_seconds": 0.022115525,
+      "sparse_seconds": 0.001144357
+    },
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 4,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.011963299999999998,
+      "dense_seconds": 0.011208128,
+      "sparse_seconds": 0.000754903
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 1,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.013202899999999998,
+      "dense_seconds": 0.011959827,
+      "sparse_seconds": 0.001242691
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 2,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.0132077,
+      "dense_seconds": 0.012027346,
+      "sparse_seconds": 0.001179779
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 4,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.0156097,
+      "dense_seconds": 0.014373403,
+      "sparse_seconds": 0.0012359819999999998
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 1,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.013309999999999999,
+      "dense_seconds": 0.012322761,
+      "sparse_seconds": 0.000986924
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 2,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.0134647,
+      "dense_seconds": 0.012585979999999998,
+      "sparse_seconds": 0.000878494
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 4,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.0135997,
+      "dense_seconds": 0.011755946,
+      "sparse_seconds": 0.001843247
+    },
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 1,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.0148766,
+      "dense_seconds": 0.013423573,
+      "sparse_seconds": 0.001452721
+    },
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 2,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.013483,
+      "dense_seconds": 0.012358363999999998,
+      "sparse_seconds": 0.001124237
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 1,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.012564899999999999,
+      "dense_seconds": 0.011532075999999999,
+      "sparse_seconds": 0.0010325920000000001
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 2,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.014178299999999998,
+      "dense_seconds": 0.012047184999999998,
+      "sparse_seconds": 0.0021308
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 4,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.0127606,
+      "dense_seconds": 0.011259845,
+      "sparse_seconds": 0.001500441
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 1,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.0126151,
+      "dense_seconds": 0.01157993,
+      "sparse_seconds": 0.001034866
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 2,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.0121106,
+      "dense_seconds": 0.011167772000000001,
+      "sparse_seconds": 0.00094258
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 4,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.012784799999999999,
+      "dense_seconds": 0.011868947,
+      "sparse_seconds": 0.00091552
+    },
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 1,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.012118499999999999,
+      "dense_seconds": 0.011061646,
+      "sparse_seconds": 0.001056638
+    },
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 2,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.012353799999999998,
+      "dense_seconds": 0.011586589999999999,
+      "sparse_seconds": 0.0007668509999999999
+    },
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 4,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.0177122,
+      "dense_seconds": 0.016922271,
+      "sparse_seconds": 0.000789544
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 2,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.0150593,
+      "dense_seconds": 0.013633817999999999,
+      "sparse_seconds": 0.00142498
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 4,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.0135861,
+      "dense_seconds": 0.012068841,
+      "sparse_seconds": 0.001517036
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 1,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.0121418,
+      "dense_seconds": 0.011136557,
+      "sparse_seconds": 0.0010049219999999999
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 2,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.012297399999999998,
+      "dense_seconds": 0.011212299,
+      "sparse_seconds": 0.0010847889999999998
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 4,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.0132667,
+      "dense_seconds": 0.012507016999999999,
+      "sparse_seconds": 0.0007593089999999999
+    },
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 1,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.0133818,
+      "dense_seconds": 0.012284879999999998,
+      "sparse_seconds": 0.0010966659999999998
+    },
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 2,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.0125071,
+      "dense_seconds": 0.011680647999999998,
+      "sparse_seconds": 0.000825977
+    },
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 4,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.0126461,
+      "dense_seconds": 0.011676162,
+      "sparse_seconds": 0.00096972
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 1,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.0125576,
+      "dense_seconds": 0.011486772999999999,
+      "sparse_seconds": 0.0010704570000000001
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 4,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.012173799999999999,
+      "dense_seconds": 0.011141304,
+      "sparse_seconds": 0.001032111
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 1,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.012547599999999999,
+      "dense_seconds": 0.011464961,
+      "sparse_seconds": 0.0010824659999999998
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 2,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.012052299999999998,
+      "dense_seconds": 0.011060615,
+      "sparse_seconds": 0.000991222
+    },
+    {
+      "workload": "regular",
+      "schedule": "guided",
+      "threads": 4,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.012483399999999999,
+      "dense_seconds": 0.011707869,
+      "sparse_seconds": 0.000775022
+    },
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 1,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.012954,
+      "dense_seconds": 0.011933822,
+      "sparse_seconds": 0.001019923
+    },
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 2,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.0122157,
+      "dense_seconds": 0.011358584,
+      "sparse_seconds": 0.000856863
+    },
+    {
+      "workload": "regular",
+      "schedule": "static",
+      "threads": 4,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.012376299999999998,
+      "dense_seconds": 0.011571288,
+      "sparse_seconds": 0.000804816
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 1,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.0123402,
+      "dense_seconds": 0.011374298,
+      "sparse_seconds": 0.0009657129999999999
+    },
+    {
+      "workload": "regular",
+      "schedule": "dynamic",
+      "threads": 2,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.0127501,
+      "dense_seconds": 0.011700417999999999,
+      "sparse_seconds": 0.001049296
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 1,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.0120401,
+      "dense_seconds": 0.011065101,
+      "sparse_seconds": 0.000974797
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 2,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.0123288,
+      "dense_seconds": 0.011498809999999998,
+      "sparse_seconds": 0.0008296929999999999
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 4,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.0124435,
+      "dense_seconds": 0.01174336,
+      "sparse_seconds": 0.000699932
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 1,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.0126401,
+      "dense_seconds": 0.011558278,
+      "sparse_seconds": 0.001081594
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 2,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.0119689,
+      "dense_seconds": 0.011125069,
+      "sparse_seconds": 0.0008434539999999999
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 4,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.0119309,
+      "dense_seconds": 0.011063008,
+      "sparse_seconds": 0.000867629
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 1,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.0123314,
+      "dense_seconds": 0.011407764999999999,
+      "sparse_seconds": 0.000923311
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 2,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.013068399999999999,
+      "dense_seconds": 0.012005917,
+      "sparse_seconds": 0.001062176
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 4,
+      "round": 0,
+      "warmup": true,
+      "seconds": 0.011787899999999999,
+      "dense_seconds": 0.011066924,
+      "sparse_seconds": 0.0007205119999999999
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 2,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.0121232,
+      "dense_seconds": 0.011255772,
+      "sparse_seconds": 0.0008672089999999999
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 4,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.0121896,
+      "dense_seconds": 0.011279477,
+      "sparse_seconds": 0.0009099109999999999
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 1,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.012155299999999999,
+      "dense_seconds": 0.011150727000000001,
+      "sparse_seconds": 0.00100436
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 2,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.013444,
+      "dense_seconds": 0.012444384,
+      "sparse_seconds": 0.000999123
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 4,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.0124882,
+      "dense_seconds": 0.011659608,
+      "sparse_seconds": 0.000828341
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 1,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.0124021,
+      "dense_seconds": 0.011365824,
+      "sparse_seconds": 0.001036017
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 2,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.012411499999999999,
+      "dense_seconds": 0.011278966,
+      "sparse_seconds": 0.001132229
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 4,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.012702999999999999,
+      "dense_seconds": 0.011653298,
+      "sparse_seconds": 0.001049387
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 1,
+      "round": 1,
+      "warmup": false,
+      "seconds": 0.0119584,
+      "dense_seconds": 0.010998042,
+      "sparse_seconds": 0.000960166
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 4,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.012321499999999999,
+      "dense_seconds": 0.011467044,
+      "sparse_seconds": 0.0008540189999999999
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 1,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.0126471,
+      "dense_seconds": 0.011634821,
+      "sparse_seconds": 0.001011951
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 2,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.011909,
+      "dense_seconds": 0.011041206999999999,
+      "sparse_seconds": 0.0008675579999999999
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 4,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.012239499999999999,
+      "dense_seconds": 0.011348348,
+      "sparse_seconds": 0.000890753
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 1,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.0122185,
+      "dense_seconds": 0.01121378,
+      "sparse_seconds": 0.0010044009999999998
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 2,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.011817799999999998,
+      "dense_seconds": 0.01103011,
+      "sparse_seconds": 0.00078723
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 4,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.012357,
+      "dense_seconds": 0.011689842,
+      "sparse_seconds": 0.0006667929999999999
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 1,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.012058399999999999,
+      "dense_seconds": 0.011121553999999999,
+      "sparse_seconds": 0.00093659
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 2,
+      "round": 2,
+      "warmup": false,
+      "seconds": 0.013528299999999998,
+      "dense_seconds": 0.012218762,
+      "sparse_seconds": 0.00130926
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 1,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.0121616,
+      "dense_seconds": 0.011218256,
+      "sparse_seconds": 0.0009431099999999999
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 2,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.011990299999999999,
+      "dense_seconds": 0.011134683999999999,
+      "sparse_seconds": 0.0008554109999999999
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 4,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.0119005,
+      "dense_seconds": 0.011029928999999999,
+      "sparse_seconds": 0.000870363
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 1,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.0119752,
+      "dense_seconds": 0.011032072,
+      "sparse_seconds": 0.00094288
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 2,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.0122151,
+      "dense_seconds": 0.011191857999999999,
+      "sparse_seconds": 0.001023108
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 4,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.0118656,
+      "dense_seconds": 0.011207881,
+      "sparse_seconds": 0.0006573989999999999
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 1,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.0124151,
+      "dense_seconds": 0.011186399999999999,
+      "sparse_seconds": 0.001228501
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 2,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.0118289,
+      "dense_seconds": 0.011052291999999998,
+      "sparse_seconds": 0.0007764149999999999
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 4,
+      "round": 3,
+      "warmup": false,
+      "seconds": 0.011762299999999998,
+      "dense_seconds": 0.011135715,
+      "sparse_seconds": 0.0006262430000000001
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 2,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.012105,
+      "dense_seconds": 0.011256443,
+      "sparse_seconds": 0.0008483200000000001
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 4,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.0120596,
+      "dense_seconds": 0.011085972,
+      "sparse_seconds": 0.000973375
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 1,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.013040999999999999,
+      "dense_seconds": 0.012045686,
+      "sparse_seconds": 0.000995117
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 2,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.012159299999999998,
+      "dense_seconds": 0.01105726,
+      "sparse_seconds": 0.001101784
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 4,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.0119571,
+      "dense_seconds": 0.011160821999999999,
+      "sparse_seconds": 0.000796033
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 1,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.0121424,
+      "dense_seconds": 0.011181894,
+      "sparse_seconds": 0.0009602459999999999
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 2,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.011799899999999999,
+      "dense_seconds": 0.011035505999999999,
+      "sparse_seconds": 0.000764067
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 4,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.0120749,
+      "dense_seconds": 0.011461716,
+      "sparse_seconds": 0.000612923
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 1,
+      "round": 4,
+      "warmup": false,
+      "seconds": 0.012552299999999999,
+      "dense_seconds": 0.011551678,
+      "sparse_seconds": 0.001000345
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 4,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.012137899999999998,
+      "dense_seconds": 0.011332415,
+      "sparse_seconds": 0.000805157
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 1,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.012300799999999999,
+      "dense_seconds": 0.011334598,
+      "sparse_seconds": 0.0009659139999999999
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 2,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.012236899999999998,
+      "dense_seconds": 0.011177847,
+      "sparse_seconds": 0.001058771
+    },
+    {
+      "workload": "irregular",
+      "schedule": "guided",
+      "threads": 4,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.0125732,
+      "dense_seconds": 0.011883878,
+      "sparse_seconds": 0.000689076
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 1,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.013108,
+      "dense_seconds": 0.012144933,
+      "sparse_seconds": 0.0009627689999999999
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 2,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.0123421,
+      "dense_seconds": 0.011459121999999999,
+      "sparse_seconds": 0.000882561
+    },
+    {
+      "workload": "irregular",
+      "schedule": "static",
+      "threads": 4,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.012155299999999999,
+      "dense_seconds": 0.011394316,
+      "sparse_seconds": 0.0007607609999999999
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 1,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.012974399999999999,
+      "dense_seconds": 0.01179043,
+      "sparse_seconds": 0.001183795
+    },
+    {
+      "workload": "irregular",
+      "schedule": "dynamic",
+      "threads": 2,
+      "round": 5,
+      "warmup": false,
+      "seconds": 0.012464,
+      "dense_seconds": 0.011311315,
+      "sparse_seconds": 0.0011525489999999999
+    }
+  ],
+  "summary": {
+    "regular": {
+      "static": {
+        "1": {
+          "median_seconds": 0.0133818,
+          "median_dense_seconds": 0.012284879999999998,
+          "median_sparse_seconds": 0.0010966659999999998,
+          "speedup_vs_one_thread_same_schedule": 1.0,
+          "parallel_efficiency": 1.0
+        },
+        "2": {
+          "median_seconds": 0.0125071,
+          "median_dense_seconds": 0.011586589999999999,
+          "median_sparse_seconds": 0.000856863,
+          "speedup_vs_one_thread_same_schedule": 1.069936276195121,
+          "parallel_efficiency": 0.5349681380975605
+        },
+        "4": {
+          "median_seconds": 0.0126461,
+          "median_dense_seconds": 0.011676162,
+          "median_sparse_seconds": 0.000804816,
+          "speedup_vs_one_thread_same_schedule": 1.0581760384624508,
+          "parallel_efficiency": 0.2645440096156127
+        }
+      },
+      "dynamic": {
+        "1": {
+          "median_seconds": 0.012564899999999999,
+          "median_dense_seconds": 0.011532075999999999,
+          "median_sparse_seconds": 0.0010704570000000001,
+          "speedup_vs_one_thread_same_schedule": 1.0,
+          "parallel_efficiency": 1.0
+        },
+        "2": {
+          "median_seconds": 0.0132077,
+          "median_dense_seconds": 0.012027346,
+          "median_sparse_seconds": 0.001205166,
+          "speedup_vs_one_thread_same_schedule": 0.9513314203078507,
+          "parallel_efficiency": 0.47566571015392534
+        },
+        "4": {
+          "median_seconds": 0.013569,
+          "median_dense_seconds": 0.012068841,
+          "median_sparse_seconds": 0.0012359819999999998,
+          "speedup_vs_one_thread_same_schedule": 0.9260004421843908,
+          "parallel_efficiency": 0.2315001105460977
+        }
+      },
+      "guided": {
+        "1": {
+          "median_seconds": 0.0126151,
+          "median_dense_seconds": 0.011464961,
+          "median_sparse_seconds": 0.001034866,
+          "speedup_vs_one_thread_same_schedule": 1.0,
+          "parallel_efficiency": 1.0
+        },
+        "2": {
+          "median_seconds": 0.012297399999999998,
+          "median_dense_seconds": 0.011212299,
+          "median_sparse_seconds": 0.000991222,
+          "speedup_vs_one_thread_same_schedule": 1.0258347292923709,
+          "parallel_efficiency": 0.5129173646461854
+        },
+        "4": {
+          "median_seconds": 0.0132667,
+          "median_dense_seconds": 0.011868947,
+          "median_sparse_seconds": 0.00091552,
+          "speedup_vs_one_thread_same_schedule": 0.9508845455162174,
+          "parallel_efficiency": 0.23772113637905434
+        }
+      }
+    },
+    "irregular": {
+      "static": {
+        "1": {
+          "median_seconds": 0.0121424,
+          "median_dense_seconds": 0.011181894,
+          "median_sparse_seconds": 0.0009602459999999999,
+          "speedup_vs_one_thread_same_schedule": 1.0,
+          "parallel_efficiency": 1.0
+        },
+        "2": {
+          "median_seconds": 0.0121232,
+          "median_dense_seconds": 0.011255772,
+          "median_sparse_seconds": 0.0008672089999999999,
+          "speedup_vs_one_thread_same_schedule": 1.0015837402665961,
+          "parallel_efficiency": 0.5007918701332981
+        },
+        "4": {
+          "median_seconds": 0.012155299999999999,
+          "median_dense_seconds": 0.011394316,
+          "median_sparse_seconds": 0.0007607609999999999,
+          "speedup_vs_one_thread_same_schedule": 0.9989387345437792,
+          "parallel_efficiency": 0.2497346836359448
+        }
+      },
+      "dynamic": {
+        "1": {
+          "median_seconds": 0.012552299999999999,
+          "median_dense_seconds": 0.011551678,
+          "median_sparse_seconds": 0.00100436,
+          "speedup_vs_one_thread_same_schedule": 1.0,
+          "parallel_efficiency": 1.0
+        },
+        "2": {
+          "median_seconds": 0.012105,
+          "median_dense_seconds": 0.011256443,
+          "median_sparse_seconds": 0.0008675579999999999,
+          "speedup_vs_one_thread_same_schedule": 1.0369516728624535,
+          "parallel_efficiency": 0.5184758364312267
+        },
+        "4": {
+          "median_seconds": 0.012137899999999998,
+          "median_dense_seconds": 0.011332415,
+          "median_sparse_seconds": 0.000870363,
+          "speedup_vs_one_thread_same_schedule": 1.0341409963832295,
+          "parallel_efficiency": 0.2585352490958074
+        }
+      },
+      "guided": {
+        "1": {
+          "median_seconds": 0.012300799999999999,
+          "median_dense_seconds": 0.011334598,
+          "median_sparse_seconds": 0.000995117,
+          "speedup_vs_one_thread_same_schedule": 1.0,
+          "parallel_efficiency": 1.0
+        },
+        "2": {
+          "median_seconds": 0.0122151,
+          "median_dense_seconds": 0.011177847,
+          "median_sparse_seconds": 0.001058771,
+          "speedup_vs_one_thread_same_schedule": 1.007015906541903,
+          "parallel_efficiency": 0.5035079532709515
+        },
+        "4": {
+          "median_seconds": 0.012357,
+          "median_dense_seconds": 0.011653298,
+          "median_sparse_seconds": 0.000689076,
+          "speedup_vs_one_thread_same_schedule": 0.9954519705430119,
+          "parallel_efficiency": 0.24886299263575298
+        }
+      }
+    }
+  }
+}
