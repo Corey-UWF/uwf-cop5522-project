@@ -66,3 +66,237 @@ Compare against Rolando's sequential implementation on shared larger
 inputs using numerical tolerances. Collect repeated timings with
 clearly defined boundaries, then investigate nonzero-balanced
 partitioning on irregular/power-law inputs and multiple nodes.
+
+2026-11-22 - Adaptive equal-row MPI implementation
+------------------------------------------------------------
+AI-assisted development:
+Verified Rolando's project1_fileio_blas_adaptive_v21.c and adapted its
+128-column blocked sparse kernel and OpenBLAS SGEMM computation into
+mpi_adaptive.c. Kept mpi_baseline.c unchanged. Retained equal-row CSR
+distribution, dense broadcasts, and output gathering.
+
+Algorithm:
+H <= F selects A(XW): rank 0 computes XW and broadcasts the intermediate.
+H > F selects (AX)W: replicate X and W and compute both local stages.
+Single-precision storage and arithmetic; one OpenBLAS thread per rank.
+Root-only XW is a potential serial bottleneck, not a proven speedup.
+
+Timing:
+MPI_Wtime phase measurements report maximum rank times for CSR
+distribution, root XW, dense broadcast, local kernels, and gathering.
+Total includes allocation and instrumentation barriers but excludes
+file I/O, initial metadata exchange, partition setup, and reductions.
+Phase maxima should not be added to infer total runtime.
+
+Validation:
+Built the new MPI source with GCC -O3 -std=c11 -Wall -Wextra -pedantic
+-Werror using isolated MPICH 4.0 and OpenBLAS 0.3.20 packages under WSL.
+No system packages were installed.
+Compared outputs against sequential v21 and an independent calculation
+with the criterion abs(actual-reference) <= 1e-4 + 1e-4*abs(reference).
+Five cases tested at 1, 2, and 8 ranks:
+- F=7, H=3: A(XW)
+- F=3, H=7: (AX)W
+- F=4, H=4: equal-dimension tie selects A(XW)
+- F=131, H=130: sparse block tail after column 128
+- F=3, H=7 with no nonzeros: zero output
+All cases passed; each used five rows, including empty rows and more
+ranks than rows at eight ranks. Verified all six timing fields were
+finite/nonnegative and OpenBLAS reported one thread even when the
+environment requested four. Invalid CSR pointers terminated the
+two-rank test with an explicit error.
+
+Limits:
+These are local correctness checks, not ACCESS or multi-node performance
+results. Nonzero-balanced partitioning and distributed XW remain future
+stages. Upload the new source and Makefile, load OpenBLAS with the matching
+MPI/compiler modules, and build with make mpi-adaptive on ACCESS.
+
+**2026-11-22 - MPI adaptive implementation and initial validation**
+------------------------------------------------------------
+
+**Goal:**
+Integrate Rolando's optimized sequential v21 approach into the MPI implementation and begin correctness and performance testing on larger inputs.
+
+**Environment:**
+UWF cs-ssh (cs-ssh.argo.uwf.edu), GCC 8.5.0, OpenMPI, and single-threaded OpenBLAS.
+
+**Implementation:**
+Created `mpi_adaptive.c`, retaining equal-row CSR partitioning while incorporating the optimized CSR kernel, OpenBLAS SGEMM, and adaptive evaluation order. The implementation selects `A(XW)` when H ≤ F and `(AX)W` otherwise. Added separate timing measurements for CSR distribution, dense multiplication, broadcasting, local computation, and output gathering.
+
+The missing `cblas.h` header was addressed using explicit CBLAS function declarations adapted from Rolando's v21 implementation.
+
+**Test inputs:**
+Generated a deterministic regular matrix using `generate_regular_inputs.c`:
+
+- N = 4,000
+- F = 128
+- H = 64
+- Nonzeros = 64,000 (16 per row)
+
+Saved input checksums in `regular-inputs.sha256`.
+
+**Correctness:**
+Compared the one-rank MPI output against Rolando's sequential v21 implementation.
+
+- Matrix dimensions: 4,000 × 64
+- Values compared: 256,000
+- Maximum absolute error: 0
+- Tolerance failures: 0
+- Result: PASS
+
+The two- and four-rank implementations executed successfully, but their outputs have not yet been numerically compared against the sequential reference.
+
+**Preliminary performance results:**
+
+| Implementation | Total elapsed time |
+|---|---:|
+| Sequential v21 | 2.660 ms |
+| MPI adaptive, 1 rank | 4.241 ms |
+| MPI adaptive, 2 ranks | 4.596 ms |
+| MPI adaptive, 4 ranks | 4.689 ms |
+
+Maximum reported local computation times:
+
+- 1 rank: 1.319 ms
+- 2 ranks: 0.622 ms
+- 4 ranks: 0.292 ms
+
+Maximum reported dense broadcast times:
+
+- 1 rank: 0.002 ms
+- 2 ranks: 0.872 ms
+- 4 ranks: 1.525 ms
+
+**Initial observations:**
+Local computation time decreased as additional MPI ranks were introduced, but total elapsed time increased slightly. The results suggest that communication, synchronization, and the root-only dense multiplication may limit scalability for this relatively small workload.
+
+These measurements represent single preliminary runs, not controlled scaling experiments. Sequential and MPI timings also cover different execution phases, so direct speedup conclusions are premature.
+
+**Next steps:**
+1. Verify numerical correctness for 2 and 4 MPI ranks.
+2. Test reverse feature dimensions to validate the `(AX)W` pathway.
+3. Generate irregular power-law-style matrices.
+4. Implement nonzero-balanced CSR partitioning in `mpi_balanced.c`.
+5. Conduct repeated performance experiments and multi-node scaling tests on Expanse.
+
+**2026-11-22 - Additional MPI correctness validation**
+
+Completed numerical correctness comparisons between `mpi_adaptive.c` and Rolando's sequential v21 implementation using the regular N=4,000, F=128, H=64 workload.
+
+Results:
+
+- 1 MPI rank: maximum absolute error = 0; failures = 0; PASS
+- 2 MPI ranks: maximum absolute error = 0; failures = 0; PASS
+- 4 MPI ranks: maximum absolute error = 0; failures = 0; PASS
+
+All 256,000 output values matched the sequential reference exactly for all three process counts. This validates the equal-row MPI distribution, local computation, and result gathering for the tested `A(XW)` configuration.
+
+The reverse-dimension `(AX)W` pathway, irregular matrices, and multi-node execution remain to be validated.
+
+**2026-11-22 - MPI adaptive reverse-dimension validation**
+------------------------------------------------------------
+
+**Goal:**
+Validate the `(AX)W` pathway in `mpi_adaptive.c` using reverse feature dimensions and multiple MPI process counts.
+
+**Environment:**
+UWF cs-ssh, GCC 8.5.0, OpenMPI, and single-threaded OpenBLAS.
+
+**Inputs:**
+Generated deterministic reverse-dimension matrices using `generate_reverse_inputs.c`.
+
+- N = 4,000
+- F = 64
+- H = 128
+- Nonzeros = 64,000
+- Evaluation order: `(AX)W`
+
+Input checksums were saved in `reverse-inputs.sha256`.
+
+**Correctness results:**
+Compared MPI outputs against Rolando's sequential v21 implementation using absolute and relative tolerances of 1e-4.
+
+- 1 rank: maximum absolute error = 0, failures = 0, PASS
+- 2 ranks: maximum absolute error = 0, failures = 0, PASS
+- 4 ranks: maximum absolute error = 0, failures = 0, PASS
+
+All 512,000 output values matched exactly for every MPI process count.
+
+Combined with the earlier primary-dimension tests, both adaptive evaluation pathways have now passed validation at 1, 2, and 4 ranks.
+
+**Preliminary execution times:**
+
+| Implementation | Runtime |
+|---|---:|
+| Sequential v21 | 3.123 ms |
+| MPI adaptive, 1 rank | 5.674 ms |
+| MPI adaptive, 2 ranks | 5.412 ms |
+| MPI adaptive, 4 ranks | 5.256 ms |
+
+Local computation decreased from 3.244 ms with one rank to 1.102 ms with four ranks. However, total execution time improved only modestly because of communication and synchronization overhead.
+
+These results represent single executions, not controlled performance benchmarks.
+
+**AI interaction:**
+ChatGPT assisted with constructing the reverse-dimension test procedure, numerical comparison script, and interpretation of preliminary scaling measurements. All compilation, execution, and correctness validation were performed on cs-ssh.
+
+**Next steps:**
+Develop irregular sparse test matrices, implement nonzero-balanced MPI partitioning, compare load balance and performance, and conduct repeated multi-node benchmarks on Expanse.
+
+**2026-11-22 - Nonzero-balanced MPI implementation and local validation**
+------------------------------------------------------------
+
+Created mpi_balanced.c from the current mpi_adaptive.c without modifying
+mpi_adaptive.c or mpi_baseline.c. The repository adaptive source still
+includes cblas.h; the balanced source uses explicit LP64 CBLAS/OpenBLAS
+declarations to support the stated cs-ssh header limitation.
+
+Rank 0 selects complete contiguous row boundaries nearest cumulative
+p*nnz/P targets. Scaled int64_t comparisons retain fractional targets and
+avoid count-product overflow. Ties select the preceding boundary; repeated
+boundaries and duplicate row pointers are valid. Zero-nonzero matrices use
+equal-row partitions. All six partition metadata arrays are broadcast
+before distribution. Local CSR pointers are checked against local nnz.
+
+Preserved both evaluation orders, blocked sparse kernel, SGEMM, single
+BLAS thread, dense broadcasts, gathering, output format, and phase timers.
+Added assigned-row/nonzero summaries, nonzero imbalance ratio, and reduced
+minimum/maximum/mean local kernel times. Zero-nonzero imbalance is N/A.
+Setup/metadata and extra diagnostic reductions remain outside total timing.
+
+Validation environment:
+Local WSL, MPICH 4.0, OpenBLAS 0.3.20, GCC -O3 -std=c11
+-Wall -Wextra -Werror -pedantic. Dependencies were extracted into isolated
+session storage, not installed system-wide.
+
+test_balanced_partition.c passed eight focused cases, including near-INT_MAX
+targets, duplicate pointers, dominant rows, zero nonzeros, excess ranks,
+and exact count/displacement coverage.
+
+test_balanced_mpi.py passed 27 configurations against both equal-row
+adaptive MPI and sequential v21, at absolute/relative tolerance 1e-4:
+- N=4000, F=128, H=64, nnz=64000
+- N=4000, F=64, H=128, nnz=64000
+- Empty rows
+- Dominant high-degree row
+- More ranks than rows
+- Zero nonzeros
+- Sparse feature-block tail
+- Power-law-style irregular rows, both evaluation orders
+Each input ran at 1, 2, and 4 ranks. Primary outputs matched v21 exactly.
+Reverse comparisons had maximum absolute errors of 0, 6.1e-05, and 4.6e-05
+at 1, 2, and 4 ranks respectively, all within tolerance. These deterministic
+test inputs are not claimed to reproduce Rolando's frozen benchmark files.
+Partition diagnostics and six finite/nonnegative phase/total timings were
+also verified. The initial excess-rank unit-test expectation was corrected
+to select the earlier boundary for an exact midpoint tie.
+
+No performance improvement or ACCESS/multi-node validation is claimed.
+Whole-row nonzero balancing cannot divide a single dominant row, and it
+does not balance row-dependent dense work in (AX)W. Root-only XW, dense
+replication, communication, and synchronization remain potential limits.
+
+Next: upload the balanced source, updated Makefile, and test sources;
+repeat validation in the actual cs-ssh environment before controlled
+adaptive-versus-balanced experiments with identical inputs and placement.
