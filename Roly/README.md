@@ -31,21 +31,29 @@ while the team handles the MPI implementation separately.
 
 ## Final Sequential Implementation
 
-The final sequential source is:
+The final portable sequential source is:
 
-    src/project1_fileio_blas_reassociated_noinline_v20.c
+    src/project1_fileio_blas_adaptive_v21.c
 
-v20 computes:
+v21 combines:
 
-    A(XW)
-
-and combines:
-
-- algebraic reassociation
-- an optimized CSR-dense kernel
+- the optimized CSR-dense kernel developed during the earlier sequential
+  work
 - serial OpenBLAS for dense SGEMM
-- preventing GCC from inlining the CSR kernel when that inlining hurt
-  performance
+- the `noinline` CSR-kernel decision established by the v19/v20 compiler
+  investigation
+- adaptive selection between the two mathematically equivalent evaluation
+  orders
+
+The adaptive rule is:
+
+    if H <= F:
+        use A(XW)
+    else:
+        use (AX)W
+
+For the tested dimension regimes, this applies the sparse multiplication
+to the narrower dense width.
 
 For the primary benchmark:
 
@@ -54,21 +62,46 @@ For the primary benchmark:
     H = 64
     nnz(A) = 64000
 
-v20 achieved:
+v21 selects:
 
-| Platform | Median runtime | GFLOP/s | Speedup vs v15 |
-|---|---:|---:|---:|
-| UWF cs-ssh, Intel Xeon Gold 6338N | **1.961 ms** | **37.597** | **16.486x** |
-| SDSC Expanse, AMD EPYC 7742 | **2.314 ms** | **31.855** | **13.766x** |
+    A(XW)
 
-Relative to the portable v15 baseline, this corresponds to approximately:
+For the reverse benchmark:
 
-    93.93% lower runtime on cs-ssh
-    92.74% lower runtime on Expanse
+    N = 4000
+    F = 64
+    H = 128
+    nnz(A) = 64000
+
+v21 selects:
+
+    (AX)W
+
+On cs-ssh, compiling the exact v21 source with
+`-march=native -mtune=native` reduced the primary-shape runtime from
+2.097 ms to 1.889 ms relative to the portable `-O3` build, a 9.91%
+reduction.
+
+On Expanse, the native build reduced the primary-shape runtime from
+1.968 ms to 1.898 ms, a 3.54% reduction. The final native result was
+16.682x faster than the portable v15 baseline on that primary workload.
+
+For the reverse shape on Expanse, portable v21 was 30.17% faster than
+the v20 fixed `A(XW)` checkpoint in the controlled 21-round experiment,
+with v21 winning all 21 paired measurements. Because v20 and v21 both
+retain the `noinline` CSR-kernel decision, this provides a cleaner
+comparison of the evaluation-order change itself.
+
+For additional context, v21 was also 20.07% faster than v18 on the same
+reverse workload.
 
 All tested correctness comparisons passed.
 
-The detailed final record is:
+The final v21 validation record is:
+
+    results/sequential-v21-adaptive-20261122.md
+
+The earlier v15-v20 results remain preserved in:
 
     results/sequential-final-20261121.md
 
@@ -225,7 +258,46 @@ substantially improved the performance of the generated code on both
 Intel Xeon and AMD EPYC.
 
 `noclone` alone did not provide the same improvement, so I did not keep
-it in the final implementation.
+it in the subsequent implementation.
+
+### v21 - Adaptive BLAS Evaluation Order
+
+Source:
+
+    src/project1_fileio_blas_adaptive_v21.c
+
+v21 retains the optimized sparse kernel, serial OpenBLAS, and the
+`noinline` CSR-kernel decision from v20.
+
+The new change is adaptive evaluation-order selection:
+
+    if H <= F:
+        use A(XW)
+    else:
+        use (AX)W
+
+For `(AX)W`, the sparse multiplication operates across width `F`.
+
+For `A(XW)`, the sparse multiplication operates across width `H`.
+
+The adaptive rule therefore chooses the tested association that applies
+the sparse operation to the narrower dense width.
+
+The primary `F=128, H=64` workload selects `A(XW)`, while the reverse
+`F=64, H=128` workload selects `(AX)W`.
+
+Controlled tests on both cs-ssh and Expanse showed that the adaptive
+implementation preserved correctness. The longer paired tests also
+showed that v21 matched the best fixed choice on the primary shape and
+provided a clear improvement when the dimensions were reversed.
+
+The exact same portable source was also tested with:
+
+    -O3 -march=native -mtune=native
+
+Native compilation improved both tested shapes on both Intel and AMD.
+Those flags are treated as an optional target-specific build
+optimization rather than a requirement of the portable source.
 
 ---
 
@@ -551,8 +623,14 @@ Algebraically equivalent evaluation orders were not performance
 equivalent. The preferred association changed when `F` and `H` were
 reversed.
 
+v21 turns that observation into an adaptive decision. For the tested
+dimension regimes, it selects the association that gives the sparse
+multiplication the narrower dense width.
+
 Compiler decisions also mattered. Preventing GCC from inlining the CSR
-kernel improved the final BLAS implementation on both Intel and AMD.
+kernel improved the BLAS implementation on both Intel and AMD.
+Target-specific `-march=native -mtune=native` compilation then provided
+an additional measurable improvement on both tested architectures.
 
 Finally, sparse-structure sensitivity differed between architectures.
 This reinforces the need to validate optimization decisions on more than
@@ -564,9 +642,10 @@ The main takeaway from the sequential experiments is:
 > Algebraically equivalent evaluation orders do not necessarily have
 > equivalent performance. The evaluation order determines the width of
 > the sparse stage, and compiler inlining can sometimes hide that
-> advantage. For the matrix shapes I tested, the better result came from
-> applying the sparse multiplication to the narrower intermediate
-> dimension after controlling for the inlining effect.
+> advantage. For the matrix shapes I tested, applying the sparse
+> multiplication to the narrower intermediate dimension produced the
+> better or equivalent result after controlling for the inlining effect.
+> v21 uses that result to select the evaluation order adaptively.
 
 ---
 
@@ -593,7 +672,10 @@ The main takeaway from the sequential experiments is:
   - BLAS `A(XW)`
 
 - `src/project1_fileio_blas_reassociated_noinline_v20.c`
-  - final sequential implementation
+  - prior fixed-association BLAS + noinline checkpoint
+
+- `src/project1_fileio_blas_adaptive_v21.c`
+  - final portable adaptive sequential implementation
 
 ### Results
 
@@ -604,7 +686,10 @@ The main takeaway from the sequential experiments is:
   - detailed earlier cs-ssh and Expanse comparison
 
 - `results/sequential-final-20261121.md`
-  - final consolidated v15-v20 results and experiments
+  - frozen consolidated v15-v20 checkpoint and experiments
+
+- `results/sequential-v21-adaptive-20261122.md`
+  - final adaptive v21 validation and native-build results
 
 ### Benchmark and Reproducibility Files
 
@@ -615,10 +700,15 @@ The main takeaway from the sequential experiments is:
   - preserved Expanse reverse-shape and irregular-structure job scripts,
     outputs, empty error files, and checksum manifest
 
+- `evidence/expanse-v21-20261122/`
+  - final Expanse v21 job script, output, empty error file, raw 21-round
+    CSV, and SHA-256 manifest
+
 ### Checksums
 
 The `checksums/` directory contains SHA-256 records for the frozen
-sequential sources, benchmark script, and final results record.
+sequential sources and benchmark artifacts. It also contains the checksum
+record for the final v21 source.
 
 ### Experiment History
 
@@ -629,20 +719,40 @@ sequential sources, benchmark script, and final results record.
 
 ## Final Status
 
-The sequential benchmarking phase is complete.
+The sequential experimentation and benchmarking phase is complete.
 
-The final sequential implementation is:
+The final portable sequential implementation is:
 
-    src/project1_fileio_blas_reassociated_noinline_v20.c
+    src/project1_fileio_blas_adaptive_v21.c
 
 Frozen SHA-256:
 
-    33d4dc6cab032946b9626c3971d1e57d2f331c4b53568745c2e30959ad038b7d
+    d06dfafef6c9465cdfb86d0f75b7434b05614209c94ccdc6d67d27d79514769a
 
-The final consolidated results record is:
+The final v21 validation record is:
+
+    results/sequential-v21-adaptive-20261122.md
+
+Frozen SHA-256:
+
+    ef1cf2bfe1bf1ce97bee5d642167732eb89bcd06c3e33dc51a386746807bedd1
+
+The prior v20 consolidated results remain preserved as the historical
+checkpoint:
 
     results/sequential-final-20261121.md
 
 Frozen SHA-256:
 
     001fda4a4849004c0b34744e1db66bb6ff9eacf9cf90d1d3d5025574060bb5fe
+
+For portable builds, the default recommendation remains:
+
+    -O3
+
+When compiling directly for a known execution system, the tested
+target-specific performance build is:
+
+    -O3 -march=native -mtune=native
+
+OpenBLAS remains single-threaded for the sequential implementation.
