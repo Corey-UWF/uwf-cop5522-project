@@ -1,0 +1,427 @@
+===== JOB =====
+SLURM_JOB_ID=55942327
+SLURM_SUBMIT_DIR=/home/rveliz/COP5522/project1/fileio-target-tests
+
+===== SYSTEM =====
+exp-13-09
+gcc (GCC) 8.5.0 20210514 (Red Hat 8.5.0-20)
+CPU(s):              128
+On-line CPU(s) list: 0-127
+Thread(s) per core:  1
+Core(s) per socket:  64
+Socket(s):           2
+Model name:          AMD EPYC 7742 64-Core Processor
+NUMA node0 CPU(s):   0-15
+NUMA node1 CPU(s):   16-31
+NUMA node2 CPU(s):   32-47
+NUMA node3 CPU(s):   48-63
+NUMA node4 CPU(s):   64-79
+NUMA node5 CPU(s):   80-95
+NUMA node6 CPU(s):   96-111
+NUMA node7 CPU(s):   112-127
+
+===== STAGE EXACT SOURCES / INPUTS =====
+
+===== VERIFY SOURCE HASHES =====
+project1_fileio_portable_v15.c: OK
+project1_fileio_blas_v18.c: OK
+project1_fileio_blas_reassociated_noinline_v20.c: OK
+project1_fileio_blas_adaptive_v21.c: OK
+
+===== VERIFY INPUT HASHES =====
+A-benchmark.csr: OK
+X-benchmark.dense: OK
+W-benchmark.dense: OK
+X-benchmark-F64.dense: OK
+W-benchmark-F64-H128.dense: OK
+
+===== INPUT DIMENSIONS =====
+--- primary ---
+4000 4000 64000
+4000 128
+128 64
+
+--- reverse ---
+4000 4000 64000
+4000 64
+64 128
+
+===== VERIFY SERIAL OPENBLAS =====
+lrwxrwxrwx 1 root root 22 Feb 18  2023 /lib64/libopenblas.so.0 -> libopenblas-r0.3.15.so
+
+===== COMPILE =====
+PASS: all five binaries compiled.
+
+===== NATIVE TARGET =====
+  -march=                     		znver1
+  -mavx                       		[enabled]
+  -mavx2                      		[enabled]
+  -mavx256-split-unaligned-load 	[disabled]
+  -mavx256-split-unaligned-store 	[enabled]
+  -mavx5124fmaps              		[disabled]
+  -mavx5124vnniw              		[disabled]
+  -mavx512bitalg              		[disabled]
+  -mavx512bw                  		[disabled]
+  -mavx512cd                  		[disabled]
+  -mavx512dq                  		[disabled]
+  -mavx512er                  		[disabled]
+  -mavx512f                   		[disabled]
+  -mavx512ifma                		[disabled]
+  -mavx512pf                  		[disabled]
+  -mavx512vbmi                		[disabled]
+  -mavx512vbmi2               		[disabled]
+  -mavx512vl                  		[disabled]
+  -mavx512vnni                		[disabled]
+  -mavx512vpopcntdq           		[disabled]
+  -mfma                       		[enabled]
+  -mfma4                      		[disabled]
+  -mtune=                     		znver1
+
+===== CSR SYMBOLS =====
+v20        00000000004014b0 0000000000000346 t csr_dense_multiply
+v21-base   00000000004014f0 0000000000000346 t csr_dense_multiply
+v21-native 00000000004014f0 0000000000000341 t csr_dense_multiply
+
+===== OPENBLAS LINKAGE =====
+v18        	libopenblas.so.0 => /lib64/libopenblas.so.0 (0x0000155553076000)
+v20        	libopenblas.so.0 => /lib64/libopenblas.so.0 (0x0000155553076000)
+v21-base   	libopenblas.so.0 => /lib64/libopenblas.so.0 (0x0000155553076000)
+v21-native 	libopenblas.so.0 => /lib64/libopenblas.so.0 (0x0000155553076000)
+
+===== CORRECTNESS OUTPUTS =====
+--- primary ---
+8e708a154ae67ca79a153c388526aa1d34e5b08abed998c3a1d87361bf16da29  /scratch/rveliz/job_55942327/project1-v21-final/Y-v15-primary.dense
+c226f78380f1ac6518a3af15868b5a7b1b45fe866dc6a48ef841d3d8ac8593a7  /scratch/rveliz/job_55942327/project1-v21-final/Y-v18-primary.dense
+388fd00a8983c981e2414e2dc67f8a68c15c8aaacda0677fa21b07920161aac5  /scratch/rveliz/job_55942327/project1-v21-final/Y-v20-primary.dense
+388fd00a8983c981e2414e2dc67f8a68c15c8aaacda0677fa21b07920161aac5  /scratch/rveliz/job_55942327/project1-v21-final/Y-v21-base-primary.dense
+388fd00a8983c981e2414e2dc67f8a68c15c8aaacda0677fa21b07920161aac5  /scratch/rveliz/job_55942327/project1-v21-final/Y-v21-native-primary.dense
+--- reverse ---
+7f02951ed72c0b6417ca65c1c292c4f757cb7a04e7b27f505e1548c67b18c47c  /scratch/rveliz/job_55942327/project1-v21-final/Y-v15-reverse.dense
+9352d58f452bba57683aeef2b67ab85512943898017525c0228090c4171bbd5f  /scratch/rveliz/job_55942327/project1-v21-final/Y-v18-reverse.dense
+fce6a9576158cbe1058df0243f78c14f59af3d9e7f623a55a7e11d2887a9bac4  /scratch/rveliz/job_55942327/project1-v21-final/Y-v20-reverse.dense
+9352d58f452bba57683aeef2b67ab85512943898017525c0228090c4171bbd5f  /scratch/rveliz/job_55942327/project1-v21-final/Y-v21-base-reverse.dense
+9352d58f452bba57683aeef2b67ab85512943898017525c0228090c4171bbd5f  /scratch/rveliz/job_55942327/project1-v21-final/Y-v21-native-reverse.dense
+
+===== NUMERICAL CORRECTNESS VS v15 =====
+primary v18 vs v15: max_abs=5.34e-05 max_rel=6.57023599e-07 failures=0
+primary v20 vs v15: max_abs=5.34e-05 max_rel=6.54836253e-07 failures=0
+primary v21-base vs v15: max_abs=5.34e-05 max_rel=6.54836253e-07 failures=0
+primary v21-native vs v15: max_abs=5.34e-05 max_rel=6.54836253e-07 failures=0
+reverse v18 vs v15: max_abs=2.29e-05 max_rel=5.45634558e-07 failures=0
+reverse v20 vs v15: max_abs=2.29e-05 max_rel=5.65108847e-07 failures=0
+reverse v21-base vs v15: max_abs=2.29e-05 max_rel=5.45634558e-07 failures=0
+reverse v21-native vs v15: max_abs=2.29e-05 max_rel=5.45634558e-07 failures=0
+PASS: all correctness checks completed.
+
+===== THREE WARMUPS PER VERSION / SHAPE =====
+--- primary ---
+warming primary/v15
+warming primary/v18
+warming primary/v20
+warming primary/v21-base
+warming primary/v21-native
+--- reverse ---
+warming reverse/v15
+warming reverse/v18
+warming reverse/v20
+warming reverse/v21-base
+warming reverse/v21-native
+
+===== 21 MEASURED ROUNDS =====
+
+----- ROUND 1 -----
+primary round= 1 pos=1 v15           31654.9 us
+primary round= 1 pos=2 v18           3385.54 us
+primary round= 1 pos=3 v20           1946.71 us
+primary round= 1 pos=4 v21-base      2004.24 us
+primary round= 1 pos=5 v21-native     1889.9 us
+reverse round= 1 pos=1 v15           29918.4 us
+reverse round= 1 pos=2 v18            2632.5 us
+reverse round= 1 pos=3 v20           2925.19 us
+reverse round= 1 pos=4 v21-base      2127.29 us
+reverse round= 1 pos=5 v21-native    2060.66 us
+
+----- ROUND 2 -----
+reverse round= 2 pos=1 v18           2696.02 us
+reverse round= 2 pos=2 v20              2940 us
+reverse round= 2 pos=3 v21-base      2231.24 us
+reverse round= 2 pos=4 v21-native    2073.44 us
+reverse round= 2 pos=5 v15           30006.9 us
+primary round= 2 pos=1 v18            3337.6 us
+primary round= 2 pos=2 v20           2038.24 us
+primary round= 2 pos=3 v21-base       2018.8 us
+primary round= 2 pos=4 v21-native     1898.4 us
+primary round= 2 pos=5 v15           31643.5 us
+
+----- ROUND 3 -----
+primary round= 3 pos=1 v20           1982.02 us
+primary round= 3 pos=2 v21-base      1888.15 us
+primary round= 3 pos=3 v21-native    1948.87 us
+primary round= 3 pos=4 v15             31675 us
+primary round= 3 pos=5 v18           3337.01 us
+reverse round= 3 pos=1 v20           2950.45 us
+reverse round= 3 pos=2 v21-base      2075.36 us
+reverse round= 3 pos=3 v21-native    2032.43 us
+reverse round= 3 pos=4 v15           29922.4 us
+reverse round= 3 pos=5 v18           2665.53 us
+
+----- ROUND 4 -----
+reverse round= 4 pos=1 v21-base      2111.91 us
+reverse round= 4 pos=2 v21-native    2127.58 us
+reverse round= 4 pos=3 v15           30140.9 us
+reverse round= 4 pos=4 v18           2655.02 us
+reverse round= 4 pos=5 v20           3044.07 us
+primary round= 4 pos=1 v21-base      1873.38 us
+primary round= 4 pos=2 v21-native    1774.21 us
+primary round= 4 pos=3 v15           31683.9 us
+primary round= 4 pos=4 v18           3331.93 us
+primary round= 4 pos=5 v20           1974.47 us
+
+----- ROUND 5 -----
+primary round= 5 pos=1 v21-native    1773.58 us
+primary round= 5 pos=2 v15           31706.7 us
+primary round= 5 pos=3 v18           3432.21 us
+primary round= 5 pos=4 v20           1845.83 us
+primary round= 5 pos=5 v21-base      2073.78 us
+reverse round= 5 pos=1 v21-native    2044.64 us
+reverse round= 5 pos=2 v15             29937 us
+reverse round= 5 pos=3 v18           2679.25 us
+reverse round= 5 pos=4 v20           3075.53 us
+reverse round= 5 pos=5 v21-base      2125.77 us
+
+----- ROUND 6 -----
+reverse round= 6 pos=1 v15           29962.8 us
+reverse round= 6 pos=2 v18           2642.22 us
+reverse round= 6 pos=3 v20           3016.29 us
+reverse round= 6 pos=4 v21-base      2114.36 us
+reverse round= 6 pos=5 v21-native    2034.84 us
+primary round= 6 pos=1 v15           31789.4 us
+primary round= 6 pos=2 v18           3334.88 us
+primary round= 6 pos=3 v20           1991.37 us
+primary round= 6 pos=4 v21-base       1835.4 us
+primary round= 6 pos=5 v21-native    1866.02 us
+
+----- ROUND 7 -----
+primary round= 7 pos=1 v18            3302.2 us
+primary round= 7 pos=2 v20           1854.79 us
+primary round= 7 pos=3 v21-base      1888.82 us
+primary round= 7 pos=4 v21-native    1809.16 us
+primary round= 7 pos=5 v15           31628.6 us
+reverse round= 7 pos=1 v18           2659.69 us
+reverse round= 7 pos=2 v20           2989.62 us
+reverse round= 7 pos=3 v21-base      2097.16 us
+reverse round= 7 pos=4 v21-native    2055.78 us
+reverse round= 7 pos=5 v15           29873.6 us
+
+----- ROUND 8 -----
+reverse round= 8 pos=1 v20           3059.95 us
+reverse round= 8 pos=2 v21-base      2169.62 us
+reverse round= 8 pos=3 v21-native    2072.78 us
+reverse round= 8 pos=4 v15           29918.2 us
+reverse round= 8 pos=5 v18           2644.27 us
+primary round= 8 pos=1 v20           1975.94 us
+primary round= 8 pos=2 v21-base      1998.53 us
+primary round= 8 pos=3 v21-native     1775.5 us
+primary round= 8 pos=4 v15           31645.4 us
+primary round= 8 pos=5 v18           3321.07 us
+
+----- ROUND 9 -----
+primary round= 9 pos=1 v21-base      1913.98 us
+primary round= 9 pos=2 v21-native    2012.48 us
+primary round= 9 pos=3 v15             31641 us
+primary round= 9 pos=4 v18           3318.55 us
+primary round= 9 pos=5 v20           1918.01 us
+reverse round= 9 pos=1 v21-base      2113.41 us
+reverse round= 9 pos=2 v21-native    2121.59 us
+reverse round= 9 pos=3 v15             29884 us
+reverse round= 9 pos=4 v18           2643.79 us
+reverse round= 9 pos=5 v20           2931.52 us
+
+----- ROUND 10 -----
+reverse round=10 pos=1 v21-native    2029.39 us
+reverse round=10 pos=2 v15           30025.7 us
+reverse round=10 pos=3 v18           2632.73 us
+reverse round=10 pos=4 v20           3125.84 us
+reverse round=10 pos=5 v21-base      2111.98 us
+primary round=10 pos=1 v21-native    1938.62 us
+primary round=10 pos=2 v15             31666 us
+primary round=10 pos=3 v18           3328.68 us
+primary round=10 pos=4 v20           1926.46 us
+primary round=10 pos=5 v21-base       1887.7 us
+
+----- ROUND 11 -----
+primary round=11 pos=1 v15           31667.3 us
+primary round=11 pos=2 v18           3428.08 us
+primary round=11 pos=3 v20           2039.87 us
+primary round=11 pos=4 v21-base      1884.78 us
+primary round=11 pos=5 v21-native    1973.01 us
+reverse round=11 pos=1 v15           30371.3 us
+reverse round=11 pos=2 v18           2720.42 us
+reverse round=11 pos=3 v20           2928.85 us
+reverse round=11 pos=4 v21-base      2160.71 us
+reverse round=11 pos=5 v21-native    2096.43 us
+
+----- ROUND 12 -----
+reverse round=12 pos=1 v18           2664.31 us
+reverse round=12 pos=2 v20           3055.42 us
+reverse round=12 pos=3 v21-base      2071.31 us
+reverse round=12 pos=4 v21-native    2067.47 us
+reverse round=12 pos=5 v15           29896.9 us
+primary round=12 pos=1 v18           3339.41 us
+primary round=12 pos=2 v20           1876.35 us
+primary round=12 pos=3 v21-base      1976.64 us
+primary round=12 pos=4 v21-native    1846.01 us
+primary round=12 pos=5 v15           31606.1 us
+
+----- ROUND 13 -----
+primary round=13 pos=1 v20           1934.54 us
+primary round=13 pos=2 v21-base      1993.11 us
+primary round=13 pos=3 v21-native    1936.53 us
+primary round=13 pos=4 v15           31697.6 us
+primary round=13 pos=5 v18           3333.46 us
+reverse round=13 pos=1 v20           3121.62 us
+reverse round=13 pos=2 v21-base      2131.64 us
+reverse round=13 pos=3 v21-native     2063.9 us
+reverse round=13 pos=4 v15           30001.3 us
+reverse round=13 pos=5 v18           2676.79 us
+
+----- ROUND 14 -----
+reverse round=14 pos=1 v21-base      2129.97 us
+reverse round=14 pos=2 v21-native    2066.58 us
+reverse round=14 pos=3 v15           29908.3 us
+reverse round=14 pos=4 v18           2685.99 us
+reverse round=14 pos=5 v20           2942.37 us
+primary round=14 pos=1 v21-base      1934.88 us
+primary round=14 pos=2 v21-native    1960.47 us
+primary round=14 pos=3 v15           31649.6 us
+primary round=14 pos=4 v18           3341.44 us
+primary round=14 pos=5 v20           1807.66 us
+
+----- ROUND 15 -----
+primary round=15 pos=1 v21-native     1854.2 us
+primary round=15 pos=2 v15           31726.5 us
+primary round=15 pos=3 v18           3328.79 us
+primary round=15 pos=4 v20           1873.58 us
+primary round=15 pos=5 v21-base      1968.07 us
+reverse round=15 pos=1 v21-native    2089.58 us
+reverse round=15 pos=2 v15           29939.8 us
+reverse round=15 pos=3 v18           2689.53 us
+reverse round=15 pos=4 v20           2999.14 us
+reverse round=15 pos=5 v21-base      2160.39 us
+
+----- ROUND 16 -----
+reverse round=16 pos=1 v15           29884.4 us
+reverse round=16 pos=2 v18           2724.41 us
+reverse round=16 pos=3 v20           2975.16 us
+reverse round=16 pos=4 v21-base      2138.83 us
+reverse round=16 pos=5 v21-native    2076.97 us
+primary round=16 pos=1 v15           31795.9 us
+primary round=16 pos=2 v18            3310.8 us
+primary round=16 pos=3 v20           1993.78 us
+primary round=16 pos=4 v21-base      1997.56 us
+primary round=16 pos=5 v21-native     1967.7 us
+
+----- ROUND 17 -----
+primary round=17 pos=1 v18            3317.4 us
+primary round=17 pos=2 v20           1813.69 us
+primary round=17 pos=3 v21-base      1806.43 us
+primary round=17 pos=4 v21-native    1786.55 us
+primary round=17 pos=5 v15           31669.7 us
+reverse round=17 pos=1 v18           2651.18 us
+reverse round=17 pos=2 v20           3067.41 us
+reverse round=17 pos=3 v21-base      2088.44 us
+reverse round=17 pos=4 v21-native    2163.69 us
+reverse round=17 pos=5 v15             30082 us
+
+----- ROUND 18 -----
+reverse round=18 pos=1 v20           3068.12 us
+reverse round=18 pos=2 v21-base      2099.52 us
+reverse round=18 pos=3 v21-native    2141.46 us
+reverse round=18 pos=4 v15             29892 us
+reverse round=18 pos=5 v18           2630.74 us
+primary round=18 pos=1 v20           2096.99 us
+primary round=18 pos=2 v21-base      1987.31 us
+primary round=18 pos=3 v21-native     1911.3 us
+primary round=18 pos=4 v15           31687.8 us
+primary round=18 pos=5 v18           3380.71 us
+
+----- ROUND 19 -----
+primary round=19 pos=1 v21-base       1995.1 us
+primary round=19 pos=2 v21-native    1960.36 us
+primary round=19 pos=3 v15           31638.7 us
+primary round=19 pos=4 v18           3344.27 us
+primary round=19 pos=5 v20           2058.74 us
+reverse round=19 pos=1 v21-base      2246.69 us
+reverse round=19 pos=2 v21-native    2067.11 us
+reverse round=19 pos=3 v15           29890.9 us
+reverse round=19 pos=4 v18           2655.92 us
+reverse round=19 pos=5 v20           3056.95 us
+
+----- ROUND 20 -----
+reverse round=20 pos=1 v21-native    2064.13 us
+reverse round=20 pos=2 v15             30107 us
+reverse round=20 pos=3 v18           2657.64 us
+reverse round=20 pos=4 v20           3061.67 us
+reverse round=20 pos=5 v21-base       2083.2 us
+primary round=20 pos=1 v21-native    2058.63 us
+primary round=20 pos=2 v15           31735.7 us
+primary round=20 pos=3 v18           3354.83 us
+primary round=20 pos=4 v20           1897.94 us
+primary round=20 pos=5 v21-base      1994.77 us
+
+----- ROUND 21 -----
+primary round=21 pos=1 v15           31760.8 us
+primary round=21 pos=2 v18           3356.81 us
+primary round=21 pos=3 v20           1980.63 us
+primary round=21 pos=4 v21-base      1923.98 us
+primary round=21 pos=5 v21-native    1888.66 us
+reverse round=21 pos=1 v15             29914 us
+reverse round=21 pos=2 v18           2673.51 us
+reverse round=21 pos=3 v20           3145.23 us
+reverse round=21 pos=4 v21-base      2158.14 us
+reverse round=21 pos=5 v21-native     2087.1 us
+
+===== MEDIAN / PAIRED ANALYSIS =====
+
+===== PRIMARY =====
+v15        median = 31669.700 us
+v18        median =  3337.010 us
+v20        median =  1946.710 us
+v21-base   median =  1968.070 us
+v21-native median =  1898.400 us
+
+Adaptive comparison:
+v20 -> v21-base: 0.9891x, candidate runtime change +1.10%, paired median 1.0021x, wins/losses 11/10
+
+Native compiler comparison:
+v21-base -> v21-native: 1.0367x, candidate runtime change -3.54%, paired median 1.0187x, wins/losses 14/7
+
+Final speedup vs portable baseline:
+v15 -> v21-native: 16.6823x, candidate runtime change -94.01%, paired median 16.6685x, wins/losses 21/0
+
+===== REVERSE =====
+v15        median = 29922.400 us
+v18        median =  2659.690 us
+v20        median =  3044.070 us
+v21-base   median =  2125.770 us
+v21-native median =  2067.470 us
+
+Adaptive comparison:
+v18 -> v21-base: 1.2512x, candidate runtime change -20.07%, paired median 1.2557x, wins/losses 21/0
+
+Native compiler comparison:
+v21-base -> v21-native: 1.0282x, candidate runtime change -2.74%, paired median 1.0307x, wins/losses 17/4
+
+Final speedup vs portable baseline:
+v15 -> v21-native: 14.4730x, candidate runtime change -93.09%, paired median 14.4720x, wins/losses 21/0
+
+===== EXPECTED ADAPTIVE PATHS =====
+primary F=128 H=64  -> A(XW)
+reverse F=64 H=128 -> (AX)W
+
+===== PRESERVE RAW RESULTS =====
+
+===== FINAL SOURCE HASH =====
+d06dfafef6c9465cdfb86d0f75b7434b05614209c94ccdc6d67d27d79514769a  project1_fileio_blas_adaptive_v21.c
+
+===== COMPLETE =====

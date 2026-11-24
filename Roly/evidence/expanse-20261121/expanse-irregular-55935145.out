@@ -1,0 +1,167 @@
+===== JOB =====
+SLURM_JOB_ID=55935145
+
+===== SYSTEM =====
+exp-1-23
+gcc (GCC) 8.5.0 20210514 (Red Hat 8.5.0-20)
+CPU(s):              128
+On-line CPU(s) list: 0-127
+Core(s) per socket:  64
+Socket(s):           2
+Model name:          AMD EPYC 7742 64-Core Processor
+NUMA node0 CPU(s):   0-15
+NUMA node1 CPU(s):   16-31
+NUMA node2 CPU(s):   32-47
+NUMA node3 CPU(s):   48-63
+NUMA node4 CPU(s):   64-79
+NUMA node5 CPU(s):   80-95
+NUMA node6 CPU(s):   96-111
+NUMA node7 CPU(s):   112-127
+
+===== VERIFY SOURCES =====
+a917e22cce0ae405ebfcad35a4fd1edd8e51337ad7e71222aad54a770c9bd536  project1_fileio_portable_v15.c
+46ba9344cd026ec3b10bfb767461cbff96fc7550b152bfa96e907e2217e27361  project1_fileio_blas_v18.c
+33d4dc6cab032946b9626c3971d1e57d2f331c4b53568745c2e30959ad038b7d  project1_fileio_blas_reassociated_noinline_v20.c
+
+===== VERIFY MATRICES =====
+f5d6f60abd92e084880a48622991db445011f5c0fb95917df65452ce1df3b617  A-benchmark.csr
+6f764bc27adce2495c54d7920f969e8345f15634d816000f2272ff52c1e5bd04  A-benchmark-irregular-a060.csr
+5c538be78eeeefd1c23e9ecd1fdf284471eed06574b47710694b6fcaa3f355d9  A-benchmark-irregular-a075.csr
+
+===== MATRIX DEGREE STATISTICS =====
+regular mean= 16.00 median= 16.00 min=  16 max=  16 stdev=   0.000
+a060    mean= 16.00 median= 10.00 min=   7 max= 955 stdev=  28.304
+a075    mean= 16.00 median=  8.00 min=   4 max=2256 stdev=  55.019
+
+===== COMPILE =====
+PASS: compiled v15, v18, v20
+
+===== V20 NOINLINE SYMBOL =====
+00000000004014b0 0000000000000346 t csr_dense_multiply
+
+===== SERIAL OPENBLAS =====
+v18 : 	libopenblas.so.0 => /lib64/libopenblas.so.0 (0x0000155553076000)
+v20 : 	libopenblas.so.0 => /lib64/libopenblas.so.0 (0x0000155553076000)
+
+===== CORRECTNESS =====
+--- regular ---
+regular v18: max_abs=5.34e-05 max_rel=6.57023599e-07 failures=0
+regular v20: max_abs=5.34e-05 max_rel=6.54836253e-07 failures=0
+--- a060 ---
+a060 v18: max_abs=0.00196 max_rel=8.19963757e-07 failures=0
+a060 v20: max_abs=0.00928 max_rel=1.87547934e-06 failures=0
+--- a075 ---
+a075 v18: max_abs=0.0049 max_rel=8.23854285e-07 failures=0
+a075 v20: max_abs=0.0489 max_rel=4.17346287e-06 failures=0
+PASS: all correctness checks completed
+
+===== THREE WARMUPS PER CASE =====
+--- regular / v15 ---
+--- regular / v18 ---
+--- regular / v20 ---
+--- a060 / v15 ---
+--- a060 / v18 ---
+--- a060 / v20 ---
+--- a075 / v15 ---
+--- a075 / v18 ---
+--- a075 / v20 ---
+
+===== SEVEN MEASURED ROUNDS =====
+
+----- ROUND 1 -----
+regular/v15: Time = 31882.9 us	Timer Resolution = 0.001 us	Performance = 2.5694 Gflop/s
+regular/v18: Time = 3523.48 us	Timer Resolution = 0.001 us	Performance = 23.2498 Gflop/s
+regular/v20: Time = 2084.2 us	Timer Resolution = 0.001 us	Performance = 35.3748 Gflop/s
+a060/v15: Time = 32254.3 us	Timer Resolution = 0.001 us	Performance = 2.53982 Gflop/s
+a060/v18: Time = 3791.14 us	Timer Resolution = 0.001 us	Performance = 21.6083 Gflop/s
+a060/v20: Time = 2614 us	Timer Resolution = 0.001 us	Performance = 28.2051 Gflop/s
+a075/v15: Time = 32158.5 us	Timer Resolution = 0.001 us	Performance = 2.54739 Gflop/s
+a075/v18: Time = 3758.45 us	Timer Resolution = 0.001 us	Performance = 21.7962 Gflop/s
+a075/v20: Time = 2515.18 us	Timer Resolution = 0.001 us	Performance = 29.3132 Gflop/s
+
+----- ROUND 2 -----
+a060/v18: Time = 3765.72 us	Timer Resolution = 0.001 us	Performance = 21.7541 Gflop/s
+a060/v20: Time = 2691.12 us	Timer Resolution = 0.001 us	Performance = 27.3967 Gflop/s
+a075/v15: Time = 32386.2 us	Timer Resolution = 0.001 us	Performance = 2.52947 Gflop/s
+a075/v18: Time = 3737.97 us	Timer Resolution = 0.001 us	Performance = 21.9157 Gflop/s
+a075/v20: Time = 2659.38 us	Timer Resolution = 0.001 us	Performance = 27.7238 Gflop/s
+regular/v15: Time = 31897.7 us	Timer Resolution = 0.001 us	Performance = 2.56821 Gflop/s
+regular/v18: Time = 3496.77 us	Timer Resolution = 0.001 us	Performance = 23.4273 Gflop/s
+regular/v20: Time = 2249.62 us	Timer Resolution = 0.001 us	Performance = 32.7735 Gflop/s
+a060/v15: Time = 32200.1 us	Timer Resolution = 0.001 us	Performance = 2.5441 Gflop/s
+
+----- ROUND 3 -----
+a075/v20: Time = 2703.11 us	Timer Resolution = 0.001 us	Performance = 27.2753 Gflop/s
+regular/v15: Time = 31798.9 us	Timer Resolution = 0.001 us	Performance = 2.57619 Gflop/s
+a060/v20: Time = 2615.96 us	Timer Resolution = 0.001 us	Performance = 28.1839 Gflop/s
+regular/v18: Time = 3521.09 us	Timer Resolution = 0.001 us	Performance = 23.2655 Gflop/s
+a075/v15: Time = 32253.2 us	Timer Resolution = 0.001 us	Performance = 2.5399 Gflop/s
+a060/v15: Time = 32227.2 us	Timer Resolution = 0.001 us	Performance = 2.54195 Gflop/s
+regular/v20: Time = 2156.12 us	Timer Resolution = 0.001 us	Performance = 34.1947 Gflop/s
+a075/v18: Time = 3776.82 us	Timer Resolution = 0.001 us	Performance = 21.6902 Gflop/s
+a060/v18: Time = 3793.43 us	Timer Resolution = 0.001 us	Performance = 21.5952 Gflop/s
+
+----- ROUND 4 -----
+regular/v20: Time = 2117.43 us	Timer Resolution = 0.001 us	Performance = 34.8196 Gflop/s
+a075/v18: Time = 3757.98 us	Timer Resolution = 0.001 us	Performance = 21.7989 Gflop/s
+a060/v15: Time = 32305.6 us	Timer Resolution = 0.001 us	Performance = 2.53578 Gflop/s
+regular/v15: Time = 31984.1 us	Timer Resolution = 0.001 us	Performance = 2.56127 Gflop/s
+a075/v20: Time = 2793.25 us	Timer Resolution = 0.001 us	Performance = 26.3951 Gflop/s
+a060/v18: Time = 3794.55 us	Timer Resolution = 0.001 us	Performance = 21.5888 Gflop/s
+regular/v18: Time = 3499.24 us	Timer Resolution = 0.001 us	Performance = 23.4108 Gflop/s
+a075/v15: Time = 32184.1 us	Timer Resolution = 0.001 us	Performance = 2.54536 Gflop/s
+a060/v20: Time = 2677.44 us	Timer Resolution = 0.001 us	Performance = 27.5368 Gflop/s
+
+----- ROUND 5 -----
+a075/v15: Time = 32160.8 us	Timer Resolution = 0.001 us	Performance = 2.5472 Gflop/s
+a060/v18: Time = 3776.51 us	Timer Resolution = 0.001 us	Performance = 21.692 Gflop/s
+regular/v20: Time = 2192.44 us	Timer Resolution = 0.001 us	Performance = 33.6283 Gflop/s
+a075/v20: Time = 2584.86 us	Timer Resolution = 0.001 us	Performance = 28.523 Gflop/s
+regular/v18: Time = 3494.55 us	Timer Resolution = 0.001 us	Performance = 23.4422 Gflop/s
+a060/v15: Time = 32213.1 us	Timer Resolution = 0.001 us	Performance = 2.54306 Gflop/s
+a075/v18: Time = 3751.88 us	Timer Resolution = 0.001 us	Performance = 21.8344 Gflop/s
+regular/v15: Time = 31816 us	Timer Resolution = 0.001 us	Performance = 2.57481 Gflop/s
+a060/v20: Time = 2601.41 us	Timer Resolution = 0.001 us	Performance = 28.3415 Gflop/s
+
+----- ROUND 6 -----
+a060/v20: Time = 2871.75 us	Timer Resolution = 0.001 us	Performance = 25.6736 Gflop/s
+regular/v18: Time = 3508.47 us	Timer Resolution = 0.001 us	Performance = 23.3492 Gflop/s
+a075/v18: Time = 3750.32 us	Timer Resolution = 0.001 us	Performance = 21.8435 Gflop/s
+a060/v15: Time = 32224.2 us	Timer Resolution = 0.001 us	Performance = 2.54219 Gflop/s
+regular/v20: Time = 2071.47 us	Timer Resolution = 0.001 us	Performance = 35.5921 Gflop/s
+a075/v15: Time = 32273.1 us	Timer Resolution = 0.001 us	Performance = 2.53834 Gflop/s
+a060/v18: Time = 3771.01 us	Timer Resolution = 0.001 us	Performance = 21.7236 Gflop/s
+regular/v15: Time = 31823.8 us	Timer Resolution = 0.001 us	Performance = 2.57417 Gflop/s
+a075/v20: Time = 2600.19 us	Timer Resolution = 0.001 us	Performance = 28.3548 Gflop/s
+
+----- ROUND 7 -----
+a075/v20: Time = 2580.81 us	Timer Resolution = 0.001 us	Performance = 28.5678 Gflop/s
+a075/v18: Time = 3764.64 us	Timer Resolution = 0.001 us	Performance = 21.7604 Gflop/s
+a075/v15: Time = 32234.3 us	Timer Resolution = 0.001 us	Performance = 2.54139 Gflop/s
+a060/v20: Time = 2610.54 us	Timer Resolution = 0.001 us	Performance = 28.2424 Gflop/s
+a060/v18: Time = 3747.56 us	Timer Resolution = 0.001 us	Performance = 21.8595 Gflop/s
+a060/v15: Time = 32246.8 us	Timer Resolution = 0.001 us	Performance = 2.54041 Gflop/s
+regular/v20: Time = 2342.89 us	Timer Resolution = 0.001 us	Performance = 31.4688 Gflop/s
+regular/v18: Time = 3492.98 us	Timer Resolution = 0.001 us	Performance = 23.4527 Gflop/s
+regular/v15: Time = 31794.6 us	Timer Resolution = 0.001 us	Performance = 2.57653 Gflop/s
+
+===== FINAL MEDIANS =====
+Matrix       v15 ms     v18 ms     v20 ms  v20 speedup
+regular      31.824      3.499      2.156      14.760x
+a060         32.227      3.777      2.616      12.319x
+a075         32.234      3.758      2.600      12.397x
+
+===== IRREGULAR STRUCTURE EFFECT VS REGULAR =====
+v15 a060 vs regular: +1.27%
+v15 a075 vs regular: +1.29%
+v18 a060 vs regular: +7.92%
+v18 a075 vs regular: +7.39%
+v20 a060 vs regular: +21.33%
+v20 a075 vs regular: +20.60%
+
+===== V20 VS V18 =====
+regular: v20 1.623x faster, 38.38% lower runtime
+a060: v20 1.444x faster, 30.73% lower runtime
+a075: v20 1.445x faster, 30.81% lower runtime
+
+===== COMPLETE =====

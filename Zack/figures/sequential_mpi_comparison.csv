@@ -1,0 +1,5 @@
+dataset,order,sequential_median_ms,best_mpi_16r_1n_median_ms,best_mpi_method,speedup_sequential_over_mpi
+large_regular,A(XW),21.025300,39.839828,hybrid,0.527746
+large_regular,(AX)W,20.819700,31.380066,adaptive,0.663469
+clustered_strong,A(XW),24.719200,46.495171,balanced,0.531651
+clustered_strong,(AX)W,24.526100,41.738402,hybrid,0.587615

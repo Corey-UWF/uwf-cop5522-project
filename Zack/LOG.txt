@@ -66,3 +66,420 @@ Compare against Rolando's sequential implementation on shared larger
 inputs using numerical tolerances. Collect repeated timings with
 clearly defined boundaries, then investigate nonzero-balanced
 partitioning on irregular/power-law inputs and multiple nodes.
+
+2026-11-22 - Adaptive equal-row MPI implementation
+------------------------------------------------------------
+AI-assisted development:
+Verified Rolando's project1_fileio_blas_adaptive_v21.c and adapted its
+128-column blocked sparse kernel and OpenBLAS SGEMM computation into
+mpi_adaptive.c. Kept mpi_baseline.c unchanged. Retained equal-row CSR
+distribution, dense broadcasts, and output gathering.
+
+Algorithm:
+H <= F selects A(XW): rank 0 computes XW and broadcasts the intermediate.
+H > F selects (AX)W: replicate X and W and compute both local stages.
+Single-precision storage and arithmetic; one OpenBLAS thread per rank.
+Root-only XW is a potential serial bottleneck, not a proven speedup.
+
+Timing:
+MPI_Wtime phase measurements report maximum rank times for CSR
+distribution, root XW, dense broadcast, local kernels, and gathering.
+Total includes allocation and instrumentation barriers but excludes
+file I/O, initial metadata exchange, partition setup, and reductions.
+Phase maxima should not be added to infer total runtime.
+
+Validation:
+Built the new MPI source with GCC -O3 -std=c11 -Wall -Wextra -pedantic
+-Werror using isolated MPICH 4.0 and OpenBLAS 0.3.20 packages under WSL.
+No system packages were installed.
+Compared outputs against sequential v21 and an independent calculation
+with the criterion abs(actual-reference) <= 1e-4 + 1e-4*abs(reference).
+Five cases tested at 1, 2, and 8 ranks:
+- F=7, H=3: A(XW)
+- F=3, H=7: (AX)W
+- F=4, H=4: equal-dimension tie selects A(XW)
+- F=131, H=130: sparse block tail after column 128
+- F=3, H=7 with no nonzeros: zero output
+All cases passed; each used five rows, including empty rows and more
+ranks than rows at eight ranks. Verified all six timing fields were
+finite/nonnegative and OpenBLAS reported one thread even when the
+environment requested four. Invalid CSR pointers terminated the
+two-rank test with an explicit error.
+
+Limits:
+These are local correctness checks, not ACCESS or multi-node performance
+results. Nonzero-balanced partitioning and distributed XW remain future
+stages. Upload the new source and Makefile, load OpenBLAS with the matching
+MPI/compiler modules, and build with make mpi-adaptive on ACCESS.
+
+**2026-11-22 - MPI adaptive implementation and initial validation**
+------------------------------------------------------------
+
+**Goal:**
+Integrate Rolando's optimized sequential v21 approach into the MPI implementation and begin correctness and performance testing on larger inputs.
+
+**Environment:**
+UWF cs-ssh (cs-ssh.argo.uwf.edu), GCC 8.5.0, OpenMPI, and single-threaded OpenBLAS.
+
+**Implementation:**
+Created `mpi_adaptive.c`, retaining equal-row CSR partitioning while incorporating the optimized CSR kernel, OpenBLAS SGEMM, and adaptive evaluation order. The implementation selects `A(XW)` when H ≤ F and `(AX)W` otherwise. Added separate timing measurements for CSR distribution, dense multiplication, broadcasting, local computation, and output gathering.
+
+The missing `cblas.h` header was addressed using explicit CBLAS function declarations adapted from Rolando's v21 implementation.
+
+**Test inputs:**
+Generated a deterministic regular matrix using `generate_regular_inputs.c`:
+
+- N = 4,000
+- F = 128
+- H = 64
+- Nonzeros = 64,000 (16 per row)
+
+Saved input checksums in `regular-inputs.sha256`.
+
+**Correctness:**
+Compared the one-rank MPI output against Rolando's sequential v21 implementation.
+
+- Matrix dimensions: 4,000 × 64
+- Values compared: 256,000
+- Maximum absolute error: 0
+- Tolerance failures: 0
+- Result: PASS
+
+The two- and four-rank implementations executed successfully, but their outputs have not yet been numerically compared against the sequential reference.
+
+**Preliminary performance results:**
+
+| Implementation | Total elapsed time |
+|---|---:|
+| Sequential v21 | 2.660 ms |
+| MPI adaptive, 1 rank | 4.241 ms |
+| MPI adaptive, 2 ranks | 4.596 ms |
+| MPI adaptive, 4 ranks | 4.689 ms |
+
+Maximum reported local computation times:
+
+- 1 rank: 1.319 ms
+- 2 ranks: 0.622 ms
+- 4 ranks: 0.292 ms
+
+Maximum reported dense broadcast times:
+
+- 1 rank: 0.002 ms
+- 2 ranks: 0.872 ms
+- 4 ranks: 1.525 ms
+
+**Initial observations:**
+Local computation time decreased as additional MPI ranks were introduced, but total elapsed time increased slightly. The results suggest that communication, synchronization, and the root-only dense multiplication may limit scalability for this relatively small workload.
+
+These measurements represent single preliminary runs, not controlled scaling experiments. Sequential and MPI timings also cover different execution phases, so direct speedup conclusions are premature.
+
+**Next steps:**
+1. Verify numerical correctness for 2 and 4 MPI ranks.
+2. Test reverse feature dimensions to validate the `(AX)W` pathway.
+3. Generate irregular power-law-style matrices.
+4. Implement nonzero-balanced CSR partitioning in `mpi_balanced.c`.
+5. Conduct repeated performance experiments and multi-node scaling tests on Expanse.
+
+**2026-11-22 - Additional MPI correctness validation**
+
+Completed numerical correctness comparisons between `mpi_adaptive.c` and Rolando's sequential v21 implementation using the regular N=4,000, F=128, H=64 workload.
+
+Results:
+
+- 1 MPI rank: maximum absolute error = 0; failures = 0; PASS
+- 2 MPI ranks: maximum absolute error = 0; failures = 0; PASS
+- 4 MPI ranks: maximum absolute error = 0; failures = 0; PASS
+
+All 256,000 output values matched the sequential reference exactly for all three process counts. This validates the equal-row MPI distribution, local computation, and result gathering for the tested `A(XW)` configuration.
+
+The reverse-dimension `(AX)W` pathway, irregular matrices, and multi-node execution remain to be validated.
+
+**2026-11-22 - MPI adaptive reverse-dimension validation**
+------------------------------------------------------------
+
+**Goal:**
+Validate the `(AX)W` pathway in `mpi_adaptive.c` using reverse feature dimensions and multiple MPI process counts.
+
+**Environment:**
+UWF cs-ssh, GCC 8.5.0, OpenMPI, and single-threaded OpenBLAS.
+
+**Inputs:**
+Generated deterministic reverse-dimension matrices using `generate_reverse_inputs.c`.
+
+- N = 4,000
+- F = 64
+- H = 128
+- Nonzeros = 64,000
+- Evaluation order: `(AX)W`
+
+Input checksums were saved in `reverse-inputs.sha256`.
+
+**Correctness results:**
+Compared MPI outputs against Rolando's sequential v21 implementation using absolute and relative tolerances of 1e-4.
+
+- 1 rank: maximum absolute error = 0, failures = 0, PASS
+- 2 ranks: maximum absolute error = 0, failures = 0, PASS
+- 4 ranks: maximum absolute error = 0, failures = 0, PASS
+
+All 512,000 output values matched exactly for every MPI process count.
+
+Combined with the earlier primary-dimension tests, both adaptive evaluation pathways have now passed validation at 1, 2, and 4 ranks.
+
+**Preliminary execution times:**
+
+| Implementation | Runtime |
+|---|---:|
+| Sequential v21 | 3.123 ms |
+| MPI adaptive, 1 rank | 5.674 ms |
+| MPI adaptive, 2 ranks | 5.412 ms |
+| MPI adaptive, 4 ranks | 5.256 ms |
+
+Local computation decreased from 3.244 ms with one rank to 1.102 ms with four ranks. However, total execution time improved only modestly because of communication and synchronization overhead.
+
+These results represent single executions, not controlled performance benchmarks.
+
+**AI interaction:**
+ChatGPT assisted with constructing the reverse-dimension test procedure, numerical comparison script, and interpretation of preliminary scaling measurements. All compilation, execution, and correctness validation were performed on cs-ssh.
+
+**Next steps:**
+Develop irregular sparse test matrices, implement nonzero-balanced MPI partitioning, compare load balance and performance, and conduct repeated multi-node benchmarks on Expanse.
+
+**2026-11-22 - Nonzero-balanced MPI implementation and local validation**
+------------------------------------------------------------
+
+Created mpi_balanced.c from the current mpi_adaptive.c without modifying
+mpi_adaptive.c or mpi_baseline.c. The repository adaptive source still
+includes cblas.h; the balanced source uses explicit LP64 CBLAS/OpenBLAS
+declarations to support the stated cs-ssh header limitation.
+
+Rank 0 selects complete contiguous row boundaries nearest cumulative
+p*nnz/P targets. Scaled int64_t comparisons retain fractional targets and
+avoid count-product overflow. Ties select the preceding boundary; repeated
+boundaries and duplicate row pointers are valid. Zero-nonzero matrices use
+equal-row partitions. All six partition metadata arrays are broadcast
+before distribution. Local CSR pointers are checked against local nnz.
+
+Preserved both evaluation orders, blocked sparse kernel, SGEMM, single
+BLAS thread, dense broadcasts, gathering, output format, and phase timers.
+Added assigned-row/nonzero summaries, nonzero imbalance ratio, and reduced
+minimum/maximum/mean local kernel times. Zero-nonzero imbalance is N/A.
+Setup/metadata and extra diagnostic reductions remain outside total timing.
+
+Validation environment:
+Local WSL, MPICH 4.0, OpenBLAS 0.3.20, GCC -O3 -std=c11
+-Wall -Wextra -Werror -pedantic. Dependencies were extracted into isolated
+session storage, not installed system-wide.
+
+test_balanced_partition.c passed eight focused cases, including near-INT_MAX
+targets, duplicate pointers, dominant rows, zero nonzeros, excess ranks,
+and exact count/displacement coverage.
+
+test_balanced_mpi.py passed 27 configurations against both equal-row
+adaptive MPI and sequential v21, at absolute/relative tolerance 1e-4:
+- N=4000, F=128, H=64, nnz=64000
+- N=4000, F=64, H=128, nnz=64000
+- Empty rows
+- Dominant high-degree row
+- More ranks than rows
+- Zero nonzeros
+- Sparse feature-block tail
+- Power-law-style irregular rows, both evaluation orders
+Each input ran at 1, 2, and 4 ranks. Primary outputs matched v21 exactly.
+Reverse comparisons had maximum absolute errors of 0, 6.1e-05, and 4.6e-05
+at 1, 2, and 4 ranks respectively, all within tolerance. These deterministic
+test inputs are not claimed to reproduce Rolando's frozen benchmark files.
+Partition diagnostics and six finite/nonnegative phase/total timings were
+also verified. The initial excess-rank unit-test expectation was corrected
+to select the earlier boundary for an exact midpoint tie.
+
+No performance improvement or ACCESS/multi-node validation is claimed.
+Whole-row nonzero balancing cannot divide a single dominant row, and it
+does not balance row-dependent dense work in (AX)W. Root-only XW, dense
+replication, communication, and synchronization remain potential limits.
+
+Next: upload the balanced source, updated Makefile, and test sources;
+repeat validation in the actual cs-ssh environment before controlled
+adaptive-versus-balanced experiments with identical inputs and placement.
+
+
+**2026-11-22 - Nonzero-balanced MPI implementation and validation**
+
+Implemented `mpi_balanced.c`, extending the validated adaptive MPI implementation with contiguous CSR partitioning based on cumulative nonzero counts.
+
+The implementation preserves complete CSR rows, adaptive multiplication order, OpenBLAS SGEMM, and existing MPI collectives. It also reports partition statistics and minimum, maximum, and average rank-local computation times.
+
+Validated against Rolando's sequential v21 implementation on cs-ssh using both regular primary dimensions (F=128, H=64) and reverse dimensions (F=64, H=128).
+
+All six tests (1, 2, and 4 ranks for each configuration) passed with maximum absolute error = 0 and zero tolerance failures.
+
+For the regular matrix, nonzero imbalance was exactly 1.0 across all tested rank counts, as expected from its uniform 16-nonzero row structure.
+
+Preliminary single-run measurements showed differences between the equal-row and balanced implementations, but these are not evidence of a partitioning advantage because both produce identical partitions on regular inputs.
+
+**Next steps:** Generate reproducible irregular sparse matrices, validate balanced partitioning on uneven row distributions, and conduct repeated controlled comparisons before moving to multi-node scaling on Expanse.
+
+**AI interaction:** A coding assistant helped implement nonzero-balanced partitioning and partition diagnostics. The generated code was reviewed, compiled, and validated against the sequential reference on cs-ssh.
+
+
+**2026-11-22 - Irregular sparse-matrix MPI validation**
+
+Generated two deterministic irregular CSR matrices containing 4,000 rows and 64,000 nonzeros each. The moderate matrix had a maximum row degree of 955, while the strongly irregular matrix had a maximum degree of 2,256.
+
+Tested both the equal-row adaptive MPI implementation and the nonzero-balanced MPI implementation using 1, 2, and 4 processes on cs-ssh.
+
+All 12 comparisons against Rolando's sequential v21 reference passed with maximum absolute error = 0 and zero numerical tolerance failures.
+
+The nonzero-balanced implementation achieved nearly uniform sparse workloads. At four ranks, the moderate matrix had a nonzero imbalance ratio of 1.0010, while the strongly irregular matrix had a ratio of approximately 1.0002.
+
+Preliminary total runtime measurements did not establish a consistent performance advantage for nonzero-balanced partitioning. Communication overhead, root-only dense multiplication, and differences in rank-local execution time may limit overall speedup.
+
+These were individual development runs rather than controlled performance benchmarks. Additional experiments are needed to quantify equal-row imbalance and assess performance on dedicated compute resources.
+
+**Next steps:** Calculate equal-row partition statistics, conduct repeated paired performance measurements, and evaluate larger irregular matrices on Expanse.
+
+**AI interaction:** ChatGPT assisted with designing reproducible irregular test inputs, developing correctness-validation procedures, and interpreting the initial partitioning and timing results.
+
+
+**2026-11-22 - Equal-row versus nonzero-balanced workload analysis**
+
+Calculated exact nonzero counts assigned by the equal-row MPI partitioning strategy for regular, moderately irregular, and strongly irregular CSR matrices. Evaluated 1, 2, 4, 8, and 16 theoretical MPI partitions using the original CSR row pointers.
+
+For four ranks, equal-row imbalance ratios were 1.0000 (regular), 1.1203 (moderate), and 1.2639 (strong). The corresponding measured nonzero-balanced ratios were 1.0000, 1.0010, and 1.0002.
+
+On the strongly irregular matrix, nonzero balancing reduced the maximum nonzeros assigned to a rank from 20,222 to 16,003, a reduction of approximately 20.9%.
+
+At 16 equal-row partitions, the imbalance ratio increased to 1.3138 for the moderate matrix and 1.6923 for the strongly irregular matrix.
+
+These findings demonstrate improved nonzero workload distribution, although reductions in total execution time have not yet been established.
+
+**Next steps:** Evaluate clustered irregular matrices and perform repeated controlled performance comparisons on dedicated compute resources.
+
+
+**2026-11-22 - Clustered irregular matrix experiments**
+
+Generated two deterministic clustered irregular CSR matrices with N=4,000 and 64,000 nonzeros. The moderate and strongly irregular matrices preserved the previously established degree distributions while concentrating high-degree rows together.
+
+Executed the sequential v21 reference, equal-row MPI, and nonzero-balanced MPI using 1, 2, and 4 processes.
+
+All 12 MPI correctness tests passed with maximum absolute error = 0 and zero tolerance failures.
+
+At four ranks, the moderate clustered matrix achieved a nonzero imbalance ratio of 1.0004 under balanced partitioning, compared with 2.2469 for equal-row partitioning. For the strongly clustered matrix, the corresponding ratios were 1.0031 and 2.6857.
+
+For the strongly clustered four-rank workload, preliminary total MPI runtime decreased from 3.998 ms (equal-row) to 3.281 ms (nonzero-balanced), an observed reduction of approximately 17.9%. These single-run results do not yet establish a reliable performance improvement.
+
+Despite nearly equal nonzero counts, rank-local computation times remained uneven. This suggests that balancing nonzeros alone may not fully balance computational costs.
+
+**Next steps:** Standardize timing measurements, conduct repeated benchmarks on dedicated compute resources, and evaluate larger matrices and multi-node scaling.
+
+**AI interaction:** ChatGPT assisted with designing the clustered workload experiment, numerical correctness validation, and interpretation of load-balance and timing results.
+
+
+
+
+
+**2026-11-22 - Official benchmark input verification and MPI validation**
+
+Imported Rolando's original benchmark inputs from the GitHub repository and transferred them to cs-ssh. Resolved Windows CRLF line-ending differences and verified all three files against the original SHA-256 checksums.
+
+Executed Rolando's sequential v21 implementation and both MPI implementations using the official N=4,000, F=128, H=64 benchmark.
+
+Validated `mpi_adaptive.c` and `mpi_balanced.c` using 1, 2, and 4 MPI ranks. All six tests passed with maximum absolute error = 0 and zero tolerance failures across 256,000 output values per test.
+
+Preliminary execution times ranged from 3.100–5.377 ms for equal-row MPI and 3.771–5.211 ms for nonzero-balanced MPI. These are individual development runs, not controlled benchmark measurements.
+
+The regular matrix produced a nonzero imbalance ratio of 1.0 for all tested configurations, confirming that both partitioning methods assign identical workloads for uniformly distributed nonzeros.
+
+**Next steps:** Transfer validated implementations and benchmark inputs to Expanse, standardize timing measurements, and conduct repeated single-node and multi-node scaling experiments.
+
+
+
+**2026-11-22 - Expanse MPI compilation and correctness validation**
+
+Transferred both MPI implementations, Rolando's sequential v21 implementation, and seven checksum-verified benchmark files to SDSC Expanse.
+
+Configured the CPU environment using GCC 10.2.0, OpenMPI 4.1.1, and OpenBLAS 0.3.18. Resolved compiler, missing-library, and CBLAS compatibility issues.
+
+Compiled `sequential-v21`, `mpi-adaptive`, and `mpi-balanced` successfully.
+
+Submitted Slurm job 55961406 using allocation `fsu125` on compute node `exp-3-39`.
+
+Executed the official N=4,000, F=128, H=64 benchmark using 1, 2, and 4 MPI ranks for both implementations.
+
+All six numerical correctness tests passed against the sequential reference with zero tolerance failures.
+
+Preliminary total execution times were 2.837, 3.227, and 3.898 ms for equal-row MPI, and 2.786, 3.187, and 3.767 ms for nonzero-balanced MPI at 1, 2, and 4 ranks, respectively.
+
+Although local computation improved with additional processes, communication overhead limited total performance on the small regular matrix.
+
+**Next steps:** Conduct repeated single-node benchmarks on regular and irregular datasets, standardize timing measurements, and evaluate multi-node scaling on larger workloads.
+
+**AI interaction:** ChatGPT assisted with troubleshooting Expanse's compiler and library environment, preparing the Slurm correctness script, and interpreting initial MPI performance measurements.
+
+
+
+**2026-11-22 - Controlled single-node MPI benchmarking on Expanse**
+
+Completed Slurm job 55961672 on Expanse (8 minutes, 48 seconds; exit code 0:0). The experiment collected 500 measured runs across five datasets, two MPI implementations, and process counts of 1, 2, 4, 8, and 16.
+
+Each configuration included 10 measured repetitions following warmup runs. The datasets included Rolando's official regular benchmark and independently generated shuffled and clustered irregular matrices.
+
+At 16 ranks, nonzero-balanced MPI showed lower median elapsed times than equal-row MPI for all five datasets. The largest observed reduction was approximately 14.5% on the shuffled strongly irregular matrix.
+
+However, performance results were mixed at lower rank counts. The balanced implementation also improved median runtime on the regular matrix at 16 ranks, even though both methods generate identical partitions. Consequently, the measured differences cannot yet be attributed exclusively to load balancing.
+
+Both implementations exhibited increasing total execution time as MPI rank count increased on these small N=4,000 workloads. Communication overhead, root-only dense multiplication, and other synchronization costs appear to limit overall scaling.
+
+These measurements provide a reproducible single-node performance baseline. Additional investigation is needed to establish repeatability, include partitioning overhead, and evaluate larger workloads.
+
+**Next steps:** Generate larger reproducible irregular matrices, standardize end-to-end timing, compare local computation and communication costs, and conduct multi-node scaling experiments.
+
+**AI interaction:** ChatGPT assisted with developing and troubleshooting the Slurm benchmarking scripts, resolving Python compatibility issues, and interpreting the experimental results.
+
+
+**Nov. 23, 2026:** Completed and analyzed larger-scale MPI benchmarks on Expanse using 40,000-row sparse matrices with 640,000 nonzeros. Verified numerical correctness against the optimized sequential implementation 
+(8/8 tests passed with zero absolute error). Collected 500 performance measurements across five datasets, two MPI partitioning methods, and 1–16 processes. Analyzed total execution times and individual MPI phases, identifying 
+communication overhead and root-only dense multiplication as major scalability limitations. Also tested the alternative multiplication order, `(AX)W`, using F=64 and H=128. This configuration showed improved scaling at two 
+processes on regular matrices, but nonzero-balanced partitioning sometimes performed worse on clustered irregular matrices. Used ChatGPT to assist with benchmark script development, troubleshooting, and performance interpretation. 
+Next steps include analyzing the alternative-order phase timings and conducting multi-node experiments.
+
+The alternative-order experiments revealed an important limitation of nonzero-balanced CSR partitioning. On strongly clustered matrices, balancing sparse nonzeros produced highly uneven row distributions. At two MPI ranks, the 
+balanced implementation assigned between 3,165 and 36,835 rows per process, despite achieving a nonzero imbalance ratio of approximately 1.0. Its maximum local computation time increased from 20.525 ms under equal-row partitioning 
+to 27.303 ms under nonzero-balanced partitioning, contributing to a 23.4% increase in total MPI runtime. These results motivate a hybrid partitioning strategy that considers both sparse nonzeros and dense computation per row.
+
+The hybrid cost-balanced partitioning strategy addressed a limitation of nonzero-balanced CSR partitioning in the \((AX)W\) multiplication order. For the strongly clustered matrix at two MPI ranks, nonzero-balanced partitioning 
+assigned between 3,165 and 36,835 rows per process, whereas hybrid partitioning assigned between 17,046 and 22,954 rows. Although the hybrid method increased the nonzero imbalance ratio from approximately 1.0 to 1.59, it reduced 
+maximum local computation time by 28.3% and total MPI execution time by 20.4% in the validation run. Similar improvements were observed at four ranks, demonstrating the importance of accounting for both sparse and dense computational 
+work when partitioning irregular matrices.
+
+**Nov. 23, 2026:** Completed the hybrid cost-balanced MPI benchmark on Expanse (job 56002005). All 24 numerical correctness tests passed against the sequential reference, and 750 performance measurements were collected across five datasets, 
+three partitioning strategies, and 1–16 MPI processes. The hybrid implementation achieved the lowest median runtime in all 25 tested configurations. On the strongly clustered matrix at two processes, hybrid partitioning reduced median 
+execution time from 37.319 ms (nonzero-balanced) to 29.666 ms, an improvement of approximately 20.5%. Analysis showed that hybrid partitioning substantially improved row-count balance while sacrificing some nonzero balance, demonstrating the 
+importance of accounting for both sparse and dense computational costs.
+
+Prepared instrumented versions of the equal-row, nonzero-balanced, and hybrid MPI implementations to measure partition construction overhead and setup-inclusive MPI execution time. Also developed a controlled multi-node benchmarking experiment 
+for 1, 2, and 4 Expanse nodes, including correctness validation, repeated measurements, and CSV output. Used ChatGPT to assist with code instrumentation, experimental design, and result interpretation. Next steps are to execute the multi-node 
+benchmarks and evaluate scaling, communication overhead, and partitioning costs.
+
+**Nov. 24, 2026:** Completed the remaining MPI multi-node benchmarks on Expanse. Recovered 149 missing measurements from a failed four-node run and combined them with 211 previously saved measurements, producing a complete dataset of 360 four-node 
+measurements. Consolidated results from one-, two-, and four-node experiments for a total of 720 measurements. Analyzed MPI scaling and compared adaptive, nonzero-balanced, and hybrid partitioning strategies, observing substantial communication 
+overhead across nodes.
+
+Benchmarked Rolando's sequential OpenBLAS implementation using the same four large-matrix workloads, with 10 repetitions each. Sequential median execution times ranged from approximately 20.8 to 24.7 ms and were faster than the tested 16-rank MPI 
+configurations. Began organizing source code, benchmark results, and documentation for GitHub and the final project report.
+
+**Nov. 24, 2026 – Performance analysis and MPI communication optimization**
+
+Generated and reviewed performance figures comparing the sequential OpenBLAS baseline with MPI implementations, including strong scaling, parallel efficiency, multi-node overhead, load balancing, and MPI phase timings. Analysis showed that the 
+sequential implementation outperformed the tested MPI configurations and that parallel efficiency declined substantially as process counts increased.
+
+Identified CSR distribution as a major multi-node bottleneck. For the strongly clustered `(AX)W` workload at 16 ranks, reported distribution time increased from approximately 2 ms on one node to 47 ms on two nodes and 69 ms on four nodes. Hybrid 
+partitioning improved row-count balance and reduced runtime relative to nonzero-balanced partitioning in selected irregular workloads, but did not overcome overall communication overhead.
+
+Developed an experimental hybrid MPI implementation that broadcasts replicated CSR data instead of using the original scatter-based distribution. Prepared a controlled benchmark comparing the original and modified implementations, including 
+correctness validation and repeated measurements. Uploaded the implementation and benchmark scripts to Expanse and submitted the experiments. Results are pending.
+
+**AI interaction:** Used ChatGPT to help generate plotting scripts, interpret performance results, identify communication bottlenecks, and develop the experimental CSR distribution optimization and benchmarking procedure. Compilation, execution, 
+and performance evaluation are being conducted on Expanse.
+
+**Next steps:** Verify numerical correctness of the replicated-CSR implementation, compare distribution and total execution times against the original hybrid MPI implementation, and determine whether the optimization should be incorporated into 
+the final project.

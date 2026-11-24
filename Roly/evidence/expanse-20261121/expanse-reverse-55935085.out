@@ -1,0 +1,79 @@
+===== JOB =====
+SLURM_JOB_ID=55935085
+
+===== SYSTEM =====
+exp-8-49
+gcc (GCC) 8.5.0 20210514 (Red Hat 8.5.0-20)
+Core(s) per socket:  64
+Socket(s):           2
+Model name:          AMD EPYC 7742 64-Core Processor
+
+===== VERIFY SOURCES =====
+46ba9344cd026ec3b10bfb767461cbff96fc7550b152bfa96e907e2217e27361  project1_fileio_blas_v18.c
+33d4dc6cab032946b9626c3971d1e57d2f331c4b53568745c2e30959ad038b7d  project1_fileio_blas_reassociated_noinline_v20.c
+
+===== VERIFY INPUTS =====
+4000 64
+64 128
+e73fa225d26e6ef53308e6aa3d01b1d0f4eb7c7aef73991116e835d724cea0b5  X-benchmark-F64.dense
+03942e902f5916d3467b33502028ad3629a1bff22d2ca47cf741a51d1cf0cb70  W-benchmark-F64-H128.dense
+
+===== COMPILE =====
+
+===== VERIFY V20 NOINLINE =====
+00000000004014b0 0000000000000346 t csr_dense_multiply
+
+===== OPENBLAS =====
+v18 : 	libopenblas.so.0 => /lib64/libopenblas.so.0 (0x0000155553076000)
+v20 : 	libopenblas.so.0 => /lib64/libopenblas.so.0 (0x0000155553076000)
+
+===== CORRECTNESS =====
+max_abs = 1.9100000002936213e-05
+max_rel = 4.717872660663828e-07
+failures = 0
+PASS: v18 and v20 agree within tolerance
+
+===== THREE WARMUPS =====
+
+===== SEVEN MEASURED ROUNDS =====
+
+----- ROUND 1: v18 v20 -----
+v18: Time = 2867.11 us	Timer Resolution = 0.001 us	Performance = 25.7151 Gflop/s
+v20: Time = 3580.62 us	Timer Resolution = 0.001 us	Performance = 22.8787 Gflop/s
+
+----- ROUND 2: v20 v18 -----
+v20: Time = 3480.82 us	Timer Resolution = 0.001 us	Performance = 23.5347 Gflop/s
+v18: Time = 2874.95 us	Timer Resolution = 0.001 us	Performance = 25.645 Gflop/s
+
+----- ROUND 3: v18 v20 -----
+v18: Time = 2926.46 us	Timer Resolution = 0.001 us	Performance = 25.1935 Gflop/s
+v20: Time = 3199.92 us	Timer Resolution = 0.001 us	Performance = 25.6006 Gflop/s
+
+----- ROUND 4: v20 v18 -----
+v20: Time = 3501.44 us	Timer Resolution = 0.001 us	Performance = 23.3961 Gflop/s
+v18: Time = 2958.88 us	Timer Resolution = 0.001 us	Performance = 24.9175 Gflop/s
+
+----- ROUND 5: v18 v20 -----
+v18: Time = 3047.7 us	Timer Resolution = 0.001 us	Performance = 24.1913 Gflop/s
+v20: Time = 3428.06 us	Timer Resolution = 0.001 us	Performance = 23.8969 Gflop/s
+
+----- ROUND 6: v20 v18 -----
+v20: Time = 3513.82 us	Timer Resolution = 0.001 us	Performance = 23.3136 Gflop/s
+v18: Time = 2881.29 us	Timer Resolution = 0.001 us	Performance = 25.5885 Gflop/s
+
+----- ROUND 7: v18 v20 -----
+v18: Time = 2993.36 us	Timer Resolution = 0.001 us	Performance = 24.6305 Gflop/s
+v20: Time = 3577.28 us	Timer Resolution = 0.001 us	Performance = 22.9001 Gflop/s
+
+===== REVERSE-SHAPE MEDIANS =====
+v18: 2926.460 us = 2.926 ms, 25.194 GFLOP/s
+v20: 3501.440 us = 3.501 ms, 23.396 GFLOP/s
+
+===== ASSOCIATION COMPARISON =====
+v18 faster by : 16.42%
+v20/v18 ratio : 1.196x
+
+v18 FLOPs = 73728000
+v20 FLOPs = 81920000
+
+===== COMPLETE =====

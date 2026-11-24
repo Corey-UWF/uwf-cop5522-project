@@ -1,0 +1,10 @@
+
+Currently Loaded Modules:
+  1) cpu/0.17.3b        (c)   3) ucx/1.10.1/dnpjjuc      5) openblas/0.3.18/w4zdqc3
+  2) gcc/10.2.0/npcyll4       4) openmpi/4.1.1/ygduf2r   6) slurm/expanse/23.02.7
+
+  Where:
+   c:  built natively for AMD Rome
+
+ 
+

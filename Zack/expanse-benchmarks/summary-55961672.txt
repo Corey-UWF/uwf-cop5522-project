@@ -1,0 +1,78 @@
+dataset,ranks,method,n,median_ms,min_ms,max_ms
+clustered_moderate,1,adaptive,10,3.064613,2.987794,3.203531
+clustered_moderate,1,balanced,10,3.088879,3.029513,3.236693
+clustered_moderate,2,adaptive,10,3.551782,3.111627,3.814202
+clustered_moderate,2,balanced,10,3.280265,3.067845,3.389952
+clustered_moderate,4,adaptive,10,4.252664,3.712100,4.470720
+clustered_moderate,4,balanced,10,4.344392,4.062069,4.597379
+clustered_moderate,8,adaptive,10,5.368638,5.240341,6.534481
+clustered_moderate,8,balanced,10,5.226655,4.385750,11.598220
+clustered_moderate,16,adaptive,10,7.476261,7.125295,7.933028
+clustered_moderate,16,balanced,10,6.838565,6.521687,7.593178
+clustered_strong,1,adaptive,10,3.176249,2.992483,3.212938
+clustered_strong,1,balanced,10,3.122006,2.976392,3.252072
+clustered_strong,2,adaptive,10,3.361719,3.103462,4.696425
+clustered_strong,2,balanced,10,3.227220,3.142365,3.524075
+clustered_strong,4,adaptive,10,3.939077,3.829180,4.443608
+clustered_strong,4,balanced,10,4.396580,3.911275,4.642674
+clustered_strong,8,adaptive,10,5.634324,5.202670,6.883901
+clustered_strong,8,balanced,10,5.119278,4.658625,6.430815
+clustered_strong,16,adaptive,10,7.718755,7.139883,8.194792
+clustered_strong,16,balanced,10,6.894230,6.455082,7.657559
+official_regular,1,adaptive,10,2.776940,2.712304,2.940705
+official_regular,1,balanced,10,2.784631,2.738214,2.899879
+official_regular,2,adaptive,10,2.997391,2.613948,3.998348
+official_regular,2,balanced,10,3.070263,2.777537,3.168454
+official_regular,4,adaptive,10,3.758380,3.398266,3.986596
+official_regular,4,balanced,10,3.958658,3.517691,4.156336
+official_regular,8,adaptive,10,5.101853,4.863819,5.845810
+official_regular,8,balanced,10,4.914677,4.444361,6.386721
+official_regular,16,adaptive,10,7.277703,7.037802,8.079396
+official_regular,16,balanced,10,6.683789,6.281816,6.976055
+shuffled_moderate,1,adaptive,10,3.012120,2.936878,3.111808
+shuffled_moderate,1,balanced,10,3.045428,2.953299,3.111958
+shuffled_moderate,2,adaptive,10,3.614281,2.960703,4.397542
+shuffled_moderate,2,balanced,10,3.230907,3.090287,3.455687
+shuffled_moderate,4,adaptive,10,3.876250,3.580753,4.240367
+shuffled_moderate,4,balanced,10,4.348821,4.116132,4.651221
+shuffled_moderate,8,adaptive,10,5.065557,4.790163,5.643763
+shuffled_moderate,8,balanced,10,5.558251,4.935417,6.249264
+shuffled_moderate,16,adaptive,10,7.780943,7.529870,8.417303
+shuffled_moderate,16,balanced,10,7.157938,6.699143,7.614209
+shuffled_strong,1,adaptive,10,3.069438,2.948961,3.222587
+shuffled_strong,1,balanced,10,3.069223,2.994337,3.123791
+shuffled_strong,2,adaptive,10,3.304276,2.982834,3.783254
+shuffled_strong,2,balanced,10,3.209693,2.954551,3.498617
+shuffled_strong,4,adaptive,10,4.100361,3.637419,4.439331
+shuffled_strong,4,balanced,10,4.355954,4.007707,4.696176
+shuffled_strong,8,adaptive,10,4.972451,4.953841,5.791090
+shuffled_strong,8,balanced,10,5.202459,4.575628,5.901157
+shuffled_strong,16,adaptive,10,7.881501,6.120971,8.563086
+shuffled_strong,16,balanced,10,6.737258,6.370111,7.362032
+
+Balanced / equal-row median ratio (less than 1 means balanced faster):
+clustered_moderate  p= 1  ratio=1.0079
+clustered_moderate  p= 2  ratio=0.9236
+clustered_moderate  p= 4  ratio=1.0216
+clustered_moderate  p= 8  ratio=0.9736
+clustered_moderate  p=16  ratio=0.9147
+clustered_strong    p= 1  ratio=0.9829
+clustered_strong    p= 2  ratio=0.9600
+clustered_strong    p= 4  ratio=1.1161
+clustered_strong    p= 8  ratio=0.9086
+clustered_strong    p=16  ratio=0.8932
+official_regular    p= 1  ratio=1.0028
+official_regular    p= 2  ratio=1.0243
+official_regular    p= 4  ratio=1.0533
+official_regular    p= 8  ratio=0.9633
+official_regular    p=16  ratio=0.9184
+shuffled_moderate   p= 1  ratio=1.0111
+shuffled_moderate   p= 2  ratio=0.8939
+shuffled_moderate   p= 4  ratio=1.1219
+shuffled_moderate   p= 8  ratio=1.0973
+shuffled_moderate   p=16  ratio=0.9199
+shuffled_strong     p= 1  ratio=0.9999
+shuffled_strong     p= 2  ratio=0.9714
+shuffled_strong     p= 4  ratio=1.0623
+shuffled_strong     p= 8  ratio=1.0463
+shuffled_strong     p=16  ratio=0.8548

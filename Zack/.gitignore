@@ -1,0 +1,35 @@
+# Compiled binaries and build artifacts
+*.o
+*.a
+*.so
+expanse-build-*/
+mpi-adaptive
+mpi-balanced
+mpi-hybrid
+mpi-*-timed
+sequential-v21
+project-[1-4]
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# SLURM output
+slurm-*.out
+slurm-*.err
+mpi-*.out
+mpi-*.err
+
+# Generated inputs and temporary validation outputs
+large-inputs/*.csr
+large-inputs/*.dense
+reverse-inputs/*.dense
+expanse-benchmarks/multinode-logs-*/
+expanse-benchmarks/multinode-validation-*/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+*.swp
+*~
