@@ -1,0 +1,7 @@
+Order=(AX)W Ranks=4 OpenBLAS_threads=1
+CSR distribution = 0.001861395 seconds
+Root XW = 0.000000000 seconds
+Dense broadcast = 0.009130353 seconds
+Local computation = 0.017301350 seconds
+Output gathering = 0.005392525 seconds
+MPI elapsed time = 0.035739541 seconds

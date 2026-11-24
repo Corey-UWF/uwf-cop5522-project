@@ -1,0 +1,78 @@
+dataset,ranks,method,n,median_ms,min_ms,max_ms
+clustered_moderate,1,adaptive,10,29.073962,28.814252,29.759606
+clustered_moderate,1,balanced,10,29.283617,28.982660,30.394174
+clustered_moderate,2,adaptive,10,33.781112,33.001245,34.811562
+clustered_moderate,2,balanced,10,35.010117,34.547864,35.478450
+clustered_moderate,4,adaptive,10,37.850366,37.425774,38.193304
+clustered_moderate,4,balanced,10,38.429674,37.648244,39.185626
+clustered_moderate,8,adaptive,10,42.601332,41.894057,49.566618
+clustered_moderate,8,balanced,10,41.665906,40.924095,42.848108
+clustered_moderate,16,adaptive,10,48.493646,47.318684,49.422144
+clustered_moderate,16,balanced,10,45.411906,44.629098,45.862094
+clustered_strong,1,adaptive,10,29.777434,29.218253,31.239006
+clustered_strong,1,balanced,10,29.397731,29.158861,29.810852
+clustered_strong,2,adaptive,10,33.927003,33.159661,34.338374
+clustered_strong,2,balanced,10,34.394189,34.087982,34.866221
+clustered_strong,4,adaptive,10,37.573295,37.178635,37.919815
+clustered_strong,4,balanced,10,37.624947,37.234000,38.526639
+clustered_strong,8,adaptive,10,42.747692,41.517464,43.755429
+clustered_strong,8,balanced,10,41.379217,40.601026,42.819633
+clustered_strong,16,adaptive,10,48.822277,47.769084,49.323719
+clustered_strong,16,balanced,10,45.996188,45.476878,46.917298
+large_regular,1,adaptive,10,25.913030,25.733401,26.927404
+large_regular,1,balanced,10,26.234131,25.751895,26.959716
+large_regular,2,adaptive,10,24.208262,23.849063,25.423014
+large_regular,2,balanced,10,24.156629,23.802215,24.636499
+large_regular,4,adaptive,10,28.497393,28.127187,30.131601
+large_regular,4,balanced,10,28.686136,28.279605,29.031111
+large_regular,8,adaptive,10,33.219820,32.782586,33.859616
+large_regular,8,balanced,10,33.509117,32.508659,34.080642
+large_regular,16,adaptive,10,38.935789,38.059332,40.283774
+large_regular,16,balanced,10,38.656674,37.956360,40.045814
+shuffled_moderate,1,adaptive,10,29.543957,29.038182,29.789376
+shuffled_moderate,1,balanced,10,29.213265,28.828537,29.665372
+shuffled_moderate,2,adaptive,10,35.190596,34.672597,35.645506
+shuffled_moderate,2,balanced,10,34.902770,34.336122,35.262604
+shuffled_moderate,4,adaptive,10,37.968145,37.202100,38.262733
+shuffled_moderate,4,balanced,10,37.812748,37.169969,38.654249
+shuffled_moderate,8,adaptive,10,42.183323,41.658451,48.865254
+shuffled_moderate,8,balanced,10,41.580354,40.239814,42.701962
+shuffled_moderate,16,adaptive,10,45.311588,44.135314,46.428191
+shuffled_moderate,16,balanced,10,44.988573,44.045655,45.774879
+shuffled_strong,1,adaptive,10,29.443700,29.010650,30.482314
+shuffled_strong,1,balanced,10,29.372577,29.045531,30.935408
+shuffled_strong,2,adaptive,10,35.009286,34.303241,35.677681
+shuffled_strong,2,balanced,10,34.888686,34.425366,35.349290
+shuffled_strong,4,adaptive,10,38.812299,38.133737,39.054788
+shuffled_strong,4,balanced,10,38.344637,37.663118,39.013367
+shuffled_strong,8,adaptive,10,42.321721,41.228106,45.233547
+shuffled_strong,8,balanced,10,41.849772,40.558876,42.887630
+shuffled_strong,16,adaptive,10,46.131168,45.010099,46.624665
+shuffled_strong,16,balanced,10,44.826787,44.158551,45.933301
+
+Balanced / equal-row median ratio (less than 1 means balanced faster):
+clustered_moderate  p= 1  ratio=1.0072
+clustered_moderate  p= 2  ratio=1.0364
+clustered_moderate  p= 4  ratio=1.0153
+clustered_moderate  p= 8  ratio=0.9780
+clustered_moderate  p=16  ratio=0.9365
+clustered_strong    p= 1  ratio=0.9872
+clustered_strong    p= 2  ratio=1.0138
+clustered_strong    p= 4  ratio=1.0014
+clustered_strong    p= 8  ratio=0.9680
+clustered_strong    p=16  ratio=0.9421
+large_regular       p= 1  ratio=1.0124
+large_regular       p= 2  ratio=0.9979
+large_regular       p= 4  ratio=1.0066
+large_regular       p= 8  ratio=1.0087
+large_regular       p=16  ratio=0.9928
+shuffled_moderate   p= 1  ratio=0.9888
+shuffled_moderate   p= 2  ratio=0.9918
+shuffled_moderate   p= 4  ratio=0.9959
+shuffled_moderate   p= 8  ratio=0.9857
+shuffled_moderate   p=16  ratio=0.9929
+shuffled_strong     p= 1  ratio=0.9976
+shuffled_strong     p= 2  ratio=0.9966
+shuffled_strong     p= 4  ratio=0.9880
+shuffled_strong     p= 8  ratio=0.9888
+shuffled_strong     p=16  ratio=0.9717

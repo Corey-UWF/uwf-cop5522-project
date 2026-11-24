@@ -1,0 +1,12 @@
+Order=(AX)W Ranks=4 OpenBLAS_threads=1
+CSR distribution = 0.002857700 seconds
+Root XW = 0.000000000 seconds
+Dense broadcast = 0.007428507 seconds
+Local computation = 0.021339360 seconds
+Output gathering = 0.004596916 seconds
+MPI elapsed time = 0.038293002 seconds
+Partition=nonzero-balanced Rows=40000 Nonzeros=640000 Ranks=4
+Rows per rank: min=305 max=26305
+Nonzeros per rank: min=159990 max=160011 average=160000.000000
+Nonzero imbalance ratio = 1.000069
+Rank-local computation: min=0.011216910 max=0.021339360 average=0.015343788 seconds

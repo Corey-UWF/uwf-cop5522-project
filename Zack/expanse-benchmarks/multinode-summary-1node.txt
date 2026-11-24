@@ -1,0 +1,13 @@
+dataset,order,ranks,nodes,method,n,partition_ms,mpi_old_ms,setup_inclusive_ms,external_wall_ms
+clustered_strong,(AX)W,16,1,adaptive,10,0.011,39.984,42.144,3971.398
+clustered_strong,(AX)W,16,1,balanced,10,1.309,39.440,41.820,3963.684
+clustered_strong,(AX)W,16,1,hybrid,10,1.536,39.278,41.738,3978.891
+clustered_strong,A(XW),16,1,adaptive,10,0.022,46.810,49.007,3413.260
+clustered_strong,A(XW),16,1,balanced,10,1.187,44.299,46.495,3407.685
+clustered_strong,A(XW),16,1,hybrid,10,1.651,44.787,47.230,3408.519
+large_regular,(AX)W,16,1,adaptive,10,0.014,29.527,31.380,4005.574
+large_regular,(AX)W,16,1,balanced,10,1.505,29.187,31.595,3994.234
+large_regular,(AX)W,16,1,hybrid,10,1.128,29.309,31.710,4013.013
+large_regular,A(XW),16,1,adaptive,10,0.021,37.785,40.258,3442.344
+large_regular,A(XW),16,1,balanced,10,1.382,37.568,39.893,3426.728
+large_regular,A(XW),16,1,hybrid,10,1.596,37.405,39.840,3439.597

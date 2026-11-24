@@ -436,3 +436,50 @@ These measurements provide a reproducible single-node performance baseline. Addi
 **AI interaction:** ChatGPT assisted with developing and troubleshooting the Slurm benchmarking scripts, resolving Python compatibility issues, and interpreting the experimental results.
 
 
+**Nov. 23, 2026:** Completed and analyzed larger-scale MPI benchmarks on Expanse using 40,000-row sparse matrices with 640,000 nonzeros. Verified numerical correctness against the optimized sequential implementation 
+(8/8 tests passed with zero absolute error). Collected 500 performance measurements across five datasets, two MPI partitioning methods, and 1–16 processes. Analyzed total execution times and individual MPI phases, identifying 
+communication overhead and root-only dense multiplication as major scalability limitations. Also tested the alternative multiplication order, `(AX)W`, using F=64 and H=128. This configuration showed improved scaling at two 
+processes on regular matrices, but nonzero-balanced partitioning sometimes performed worse on clustered irregular matrices. Used ChatGPT to assist with benchmark script development, troubleshooting, and performance interpretation. 
+Next steps include analyzing the alternative-order phase timings and conducting multi-node experiments.
+
+The alternative-order experiments revealed an important limitation of nonzero-balanced CSR partitioning. On strongly clustered matrices, balancing sparse nonzeros produced highly uneven row distributions. At two MPI ranks, the 
+balanced implementation assigned between 3,165 and 36,835 rows per process, despite achieving a nonzero imbalance ratio of approximately 1.0. Its maximum local computation time increased from 20.525 ms under equal-row partitioning 
+to 27.303 ms under nonzero-balanced partitioning, contributing to a 23.4% increase in total MPI runtime. These results motivate a hybrid partitioning strategy that considers both sparse nonzeros and dense computation per row.
+
+The hybrid cost-balanced partitioning strategy addressed a limitation of nonzero-balanced CSR partitioning in the \((AX)W\) multiplication order. For the strongly clustered matrix at two MPI ranks, nonzero-balanced partitioning 
+assigned between 3,165 and 36,835 rows per process, whereas hybrid partitioning assigned between 17,046 and 22,954 rows. Although the hybrid method increased the nonzero imbalance ratio from approximately 1.0 to 1.59, it reduced 
+maximum local computation time by 28.3% and total MPI execution time by 20.4% in the validation run. Similar improvements were observed at four ranks, demonstrating the importance of accounting for both sparse and dense computational 
+work when partitioning irregular matrices.
+
+**Nov. 23, 2026:** Completed the hybrid cost-balanced MPI benchmark on Expanse (job 56002005). All 24 numerical correctness tests passed against the sequential reference, and 750 performance measurements were collected across five datasets, 
+three partitioning strategies, and 1–16 MPI processes. The hybrid implementation achieved the lowest median runtime in all 25 tested configurations. On the strongly clustered matrix at two processes, hybrid partitioning reduced median 
+execution time from 37.319 ms (nonzero-balanced) to 29.666 ms, an improvement of approximately 20.5%. Analysis showed that hybrid partitioning substantially improved row-count balance while sacrificing some nonzero balance, demonstrating the 
+importance of accounting for both sparse and dense computational costs.
+
+Prepared instrumented versions of the equal-row, nonzero-balanced, and hybrid MPI implementations to measure partition construction overhead and setup-inclusive MPI execution time. Also developed a controlled multi-node benchmarking experiment 
+for 1, 2, and 4 Expanse nodes, including correctness validation, repeated measurements, and CSV output. Used ChatGPT to assist with code instrumentation, experimental design, and result interpretation. Next steps are to execute the multi-node 
+benchmarks and evaluate scaling, communication overhead, and partitioning costs.
+
+**Nov. 24, 2026:** Completed the remaining MPI multi-node benchmarks on Expanse. Recovered 149 missing measurements from a failed four-node run and combined them with 211 previously saved measurements, producing a complete dataset of 360 four-node 
+measurements. Consolidated results from one-, two-, and four-node experiments for a total of 720 measurements. Analyzed MPI scaling and compared adaptive, nonzero-balanced, and hybrid partitioning strategies, observing substantial communication 
+overhead across nodes.
+
+Benchmarked Rolando's sequential OpenBLAS implementation using the same four large-matrix workloads, with 10 repetitions each. Sequential median execution times ranged from approximately 20.8 to 24.7 ms and were faster than the tested 16-rank MPI 
+configurations. Began organizing source code, benchmark results, and documentation for GitHub and the final project report.
+
+**Nov. 24, 2026 – Performance analysis and MPI communication optimization**
+
+Generated and reviewed performance figures comparing the sequential OpenBLAS baseline with MPI implementations, including strong scaling, parallel efficiency, multi-node overhead, load balancing, and MPI phase timings. Analysis showed that the 
+sequential implementation outperformed the tested MPI configurations and that parallel efficiency declined substantially as process counts increased.
+
+Identified CSR distribution as a major multi-node bottleneck. For the strongly clustered `(AX)W` workload at 16 ranks, reported distribution time increased from approximately 2 ms on one node to 47 ms on two nodes and 69 ms on four nodes. Hybrid 
+partitioning improved row-count balance and reduced runtime relative to nonzero-balanced partitioning in selected irregular workloads, but did not overcome overall communication overhead.
+
+Developed an experimental hybrid MPI implementation that broadcasts replicated CSR data instead of using the original scatter-based distribution. Prepared a controlled benchmark comparing the original and modified implementations, including 
+correctness validation and repeated measurements. Uploaded the implementation and benchmark scripts to Expanse and submitted the experiments. Results are pending.
+
+**AI interaction:** Used ChatGPT to help generate plotting scripts, interpret performance results, identify communication bottlenecks, and develop the experimental CSR distribution optimization and benchmarking procedure. Compilation, execution, 
+and performance evaluation are being conducted on Expanse.
+
+**Next steps:** Verify numerical correctness of the replicated-CSR implementation, compare distribution and total execution times against the original hybrid MPI implementation, and determine whether the optimization should be incorporated into 
+the final project.

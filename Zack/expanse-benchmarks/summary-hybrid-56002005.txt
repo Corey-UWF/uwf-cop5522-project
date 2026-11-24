@@ -1,0 +1,103 @@
+dataset,ranks,method,n,median_ms,min_ms,max_ms
+clustered_moderate,1,adaptive,10,32.192771,31.812520,32.457475
+clustered_moderate,1,balanced,10,32.094873,31.836245,33.115014
+clustered_moderate,1,hybrid,10,31.458935,31.231737,31.775331
+clustered_moderate,2,adaptive,10,30.893816,30.345860,31.361172
+clustered_moderate,2,balanced,10,36.861934,36.420970,37.178855
+clustered_moderate,2,hybrid,10,30.366208,30.123170,30.725665
+clustered_moderate,4,adaptive,10,34.840331,34.343374,35.140756
+clustered_moderate,4,balanced,10,36.288348,36.012166,36.318493
+clustered_moderate,4,hybrid,10,32.937082,32.634246,33.511167
+clustered_moderate,8,adaptive,10,37.019660,36.262048,55.591192
+clustered_moderate,8,balanced,10,37.145882,36.871698,38.302029
+clustered_moderate,8,hybrid,10,36.007653,35.511506,36.885842
+clustered_moderate,16,adaptive,10,40.930200,39.786101,47.618677
+clustered_moderate,16,balanced,10,39.911195,38.590401,40.335616
+clustered_moderate,16,hybrid,10,39.267821,38.259790,39.935896
+clustered_strong,1,adaptive,10,31.898060,31.642449,32.115982
+clustered_strong,1,balanced,10,31.914537,31.761133,32.262571
+clustered_strong,1,hybrid,10,31.489035,31.197160,32.009541
+clustered_strong,2,adaptive,10,30.188225,29.867873,30.410344
+clustered_strong,2,balanced,10,37.319179,37.097126,37.672118
+clustered_strong,2,hybrid,10,29.665907,29.461163,30.005091
+clustered_strong,4,adaptive,10,34.675590,34.375350,35.261149
+clustered_strong,4,balanced,10,37.922035,37.751740,38.337363
+clustered_strong,4,hybrid,10,32.768935,32.476554,33.176402
+clustered_strong,8,adaptive,10,36.892752,36.203815,37.305500
+clustered_strong,8,balanced,10,38.815758,37.610522,39.935796
+clustered_strong,8,hybrid,10,35.885778,35.525187,36.750314
+clustered_strong,16,adaptive,10,41.552720,41.110086,42.391711
+clustered_strong,16,balanced,10,40.594501,40.221462,41.834230
+clustered_strong,16,hybrid,10,39.647527,39.262946,40.465662
+large_regular,1,adaptive,10,29.746402,28.211759,30.248894
+large_regular,1,balanced,10,28.735314,28.530118,28.959626
+large_regular,1,hybrid,10,28.290422,27.328007,29.266974
+large_regular,2,adaptive,10,21.595721,21.219373,21.970398
+large_regular,2,balanced,10,21.730486,21.221919,22.196083
+large_regular,2,hybrid,10,20.968151,20.493578,21.277123
+large_regular,4,adaptive,10,24.375075,24.118081,25.127032
+large_regular,4,balanced,10,23.369442,22.879498,23.647727
+large_regular,4,hybrid,10,22.871780,22.278297,23.553999
+large_regular,8,adaptive,10,27.401112,26.493726,28.862141
+large_regular,8,balanced,10,26.459021,25.953658,28.204301
+large_regular,8,hybrid,10,26.426820,25.668221,27.423037
+large_regular,16,adaptive,10,30.599180,29.415405,32.219417
+large_regular,16,balanced,10,30.642858,29.603258,31.747941
+large_regular,16,hybrid,10,30.150515,29.479938,31.256123
+shuffled_moderate,1,adaptive,10,32.430408,31.926163,32.667461
+shuffled_moderate,1,balanced,10,32.363462,32.108016,32.925787
+shuffled_moderate,1,hybrid,10,31.621529,31.506633,32.139965
+shuffled_moderate,2,adaptive,10,32.119631,31.908999,32.442333
+shuffled_moderate,2,balanced,10,32.371000,31.943514,32.635719
+shuffled_moderate,2,hybrid,10,31.870362,31.425639,32.099889
+shuffled_moderate,4,adaptive,10,35.118631,34.764649,35.856706
+shuffled_moderate,4,balanced,10,33.905681,33.144176,34.265688
+shuffled_moderate,4,hybrid,10,33.854680,33.535844,34.169267
+shuffled_moderate,8,adaptive,10,35.414623,34.896198,35.671899
+shuffled_moderate,8,balanced,10,35.259316,34.599889,36.686490
+shuffled_moderate,8,hybrid,10,34.465606,34.065562,35.539018
+shuffled_moderate,16,adaptive,10,38.314647,37.568332,39.494931
+shuffled_moderate,16,balanced,10,37.839422,37.256945,38.672060
+shuffled_moderate,16,hybrid,10,37.212010,36.755450,38.540302
+shuffled_strong,1,adaptive,10,32.051216,31.749007,32.203403
+shuffled_strong,1,balanced,10,32.050595,31.894770,32.349239
+shuffled_strong,1,hybrid,10,31.482049,31.360855,31.910372
+shuffled_strong,2,adaptive,10,31.998531,31.358920,32.401995
+shuffled_strong,2,balanced,10,32.271130,31.847184,32.766532
+shuffled_strong,2,hybrid,10,31.643973,31.448035,32.134511
+shuffled_strong,4,adaptive,10,34.409325,33.946500,34.742714
+shuffled_strong,4,balanced,10,33.227191,32.766250,33.532531
+shuffled_strong,4,hybrid,10,33.018003,32.479713,33.206154
+shuffled_strong,8,adaptive,10,35.683844,35.122201,36.436115
+shuffled_strong,8,balanced,10,35.126871,34.045965,35.726431
+shuffled_strong,8,hybrid,10,34.369208,33.751230,35.432606
+shuffled_strong,16,adaptive,10,38.635886,37.971068,39.588466
+shuffled_strong,16,balanced,10,37.703357,37.159801,38.153112
+shuffled_strong,16,hybrid,10,37.401363,36.537940,38.055704
+
+Balanced / equal-row median ratio (less than 1 means balanced faster):
+clustered_moderate  p= 1  ratio=0.9970
+clustered_moderate  p= 2  ratio=1.1932
+clustered_moderate  p= 4  ratio=1.0416
+clustered_moderate  p= 8  ratio=1.0034
+clustered_moderate  p=16  ratio=0.9751
+clustered_strong    p= 1  ratio=1.0005
+clustered_strong    p= 2  ratio=1.2362
+clustered_strong    p= 4  ratio=1.0936
+clustered_strong    p= 8  ratio=1.0521
+clustered_strong    p=16  ratio=0.9769
+large_regular       p= 1  ratio=0.9660
+large_regular       p= 2  ratio=1.0062
+large_regular       p= 4  ratio=0.9587
+large_regular       p= 8  ratio=0.9656
+large_regular       p=16  ratio=1.0014
+shuffled_moderate   p= 1  ratio=0.9979
+shuffled_moderate   p= 2  ratio=1.0078
+shuffled_moderate   p= 4  ratio=0.9655
+shuffled_moderate   p= 8  ratio=0.9956
+shuffled_moderate   p=16  ratio=0.9876
+shuffled_strong     p= 1  ratio=1.0000
+shuffled_strong     p= 2  ratio=1.0085
+shuffled_strong     p= 4  ratio=0.9656
+shuffled_strong     p= 8  ratio=0.9844
+shuffled_strong     p=16  ratio=0.9759

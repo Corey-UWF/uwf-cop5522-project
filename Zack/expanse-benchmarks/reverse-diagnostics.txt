@@ -1,0 +1,113 @@
+File: expanse-benchmarks/mpi-reverse-single-55993667.csv
+Measured records: 500
+
+=== CLUSTERED MATRIX PHASE TIMINGS (ms) ===
+Dataset               P Method       Total  Distrib   RootXW    Bcast  Compute   Gather     Wall
+clustered_moderate    1 adaptive    32.753    1.919    0.000    0.000   25.880    3.133 3388.634
+clustered_moderate    1 balanced    32.995    2.003    0.000    0.000   26.033    3.134 3429.088
+clustered_moderate    2 adaptive    31.690    2.038    0.000    2.364   21.523    4.001 3419.930
+clustered_moderate    2 balanced    37.279    2.023    0.000    2.351   26.862    4.301 3469.773
+clustered_moderate    4 adaptive    35.304    2.738    0.000    8.947   17.558    4.269 3501.911
+clustered_moderate    4 balanced    36.978    2.919    0.000    7.447   19.845    4.693 3547.528
+clustered_moderate    8 adaptive    37.281    3.341    0.000   10.260   15.456    6.366 3680.143
+clustered_moderate    8 balanced    38.007    4.318    0.000    9.951   15.620    6.269 3716.590
+clustered_moderate   16 adaptive    40.891    3.754    0.000   16.471   13.891    5.510 4046.743
+clustered_moderate   16 balanced    39.855    3.038    0.000   16.307   12.803    6.050 4091.669
+clustered_strong      1 adaptive    32.578    1.937    0.000    0.000   25.743    3.122 3273.207
+clustered_strong      1 balanced    32.928    2.012    0.000    0.000   25.942    3.118 3296.339
+clustered_strong      2 adaptive    30.584    2.049    0.000    2.393   20.525    3.893 3291.331
+clustered_strong      2 balanced    37.755    2.001    0.000    2.385   27.303    4.319 3341.141
+clustered_strong      4 adaptive    34.904    1.813    0.000    9.062   17.104    5.215 3373.913
+clustered_strong      4 balanced    38.322    2.809    0.000    7.409   21.432    4.607 3428.798
+clustered_strong      8 adaptive    37.315    3.327    0.000   10.264   15.500    6.417 3571.312
+clustered_strong      8 balanced    39.317    4.430    0.000   10.016   17.053    6.129 3622.976
+clustered_strong     16 adaptive    41.968    3.520    0.000   16.572   14.495    5.783 4011.544
+clustered_strong     16 balanced    41.818    3.015    0.000   16.602   14.460    6.125 4054.911
+
+=== BALANCED WORKLOAD STATISTICS ===
+Dataset               P   NNZ ratio   Min rows   Max rows  Min compute  Max compute  Avg compute
+clustered_moderate    1        1.000    40000.000    40000.000       26.033       26.033       26.033
+clustered_moderate    2        1.000     7280.000    32720.000       16.917       26.862       21.871
+clustered_moderate    4        1.000     1358.000    20288.000       12.224       19.845       15.917
+clustered_moderate    8        1.000      267.000    11157.000        9.676       15.620       12.496
+clustered_moderate   16        1.003       57.000     5777.000        8.179       12.803       10.391
+clustered_strong      1        1.000    40000.000    40000.000       25.942       25.942       25.942
+clustered_strong      2        1.000     3165.000    36835.000       14.789       27.303       21.043
+clustered_strong      4        1.000      305.000    26305.000       11.227       21.432       15.376
+clustered_strong      8        1.001       40.000    15719.000        9.333       17.053       12.111
+clustered_strong     16        1.021        8.000     8557.000        8.041       14.460       10.463
+
+=== BALANCED MINUS EQUAL-ROW PHASE DIFFERENCES (ms) ===
+Positive values mean balanced is slower.
+
+clustered_moderate | 2 ranks
+  mpi_elapsed_s          +5.589 ms
+  distribution_s         -0.015 ms
+  root_xw_s              +0.000 ms
+  broadcast_s            -0.013 ms
+  local_compute_s        +5.339 ms
+  gather_s               +0.301 ms
+  wall_s                 +49.842 ms
+
+clustered_moderate | 4 ranks
+  mpi_elapsed_s          +1.674 ms
+  distribution_s         +0.181 ms
+  root_xw_s              +0.000 ms
+  broadcast_s            -1.500 ms
+  local_compute_s        +2.287 ms
+  gather_s               +0.424 ms
+  wall_s                 +45.617 ms
+
+clustered_moderate | 8 ranks
+  mpi_elapsed_s          +0.726 ms
+  distribution_s         +0.977 ms
+  root_xw_s              +0.000 ms
+  broadcast_s            -0.310 ms
+  local_compute_s        +0.164 ms
+  gather_s               -0.097 ms
+  wall_s                 +36.446 ms
+
+clustered_moderate | 16 ranks
+  mpi_elapsed_s          -1.035 ms
+  distribution_s         -0.716 ms
+  root_xw_s              +0.000 ms
+  broadcast_s            -0.164 ms
+  local_compute_s        -1.088 ms
+  gather_s               +0.540 ms
+  wall_s                 +44.926 ms
+
+clustered_strong | 2 ranks
+  mpi_elapsed_s          +7.171 ms
+  distribution_s         -0.048 ms
+  root_xw_s              +0.000 ms
+  broadcast_s            -0.008 ms
+  local_compute_s        +6.778 ms
+  gather_s               +0.427 ms
+  wall_s                 +49.810 ms
+
+clustered_strong | 4 ranks
+  mpi_elapsed_s          +3.418 ms
+  distribution_s         +0.996 ms
+  root_xw_s              +0.000 ms
+  broadcast_s            -1.653 ms
+  local_compute_s        +4.329 ms
+  gather_s               -0.608 ms
+  wall_s                 +54.884 ms
+
+clustered_strong | 8 ranks
+  mpi_elapsed_s          +2.002 ms
+  distribution_s         +1.103 ms
+  root_xw_s              +0.000 ms
+  broadcast_s            -0.248 ms
+  local_compute_s        +1.553 ms
+  gather_s               -0.288 ms
+  wall_s                 +51.663 ms
+
+clustered_strong | 16 ranks
+  mpi_elapsed_s          -0.150 ms
+  distribution_s         -0.505 ms
+  root_xw_s              +0.000 ms
+  broadcast_s            +0.031 ms
+  local_compute_s        -0.035 ms
+  gather_s               +0.342 ms
+  wall_s                 +43.366 ms
