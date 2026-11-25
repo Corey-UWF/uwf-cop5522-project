@@ -1,30 +1,39 @@
+# COP5522 submission build (draft: requires basic_sequential.c from teammate)
+# Load compiler/OpenMPI/OpenBLAS modules before building on Expanse.
+CC ?= gcc
 MPICC ?= mpicc
 CFLAGS ?= -O3 -std=c11 -Wall -Wextra -pedantic
-BLAS_CPPFLAGS ?=
-BLAS_LDFLAGS ?=
-BLAS_LIBS ?= -lopenblas
+CPPFLAGS ?=
+LDFLAGS ?=
+BLAS_LIBS ?= -lopenblas -lm
+# Example: make BLAS_DIR=/path/to/openblas/lib
+BLAS_DIR ?=
+ifneq ($(strip $(BLAS_DIR)),)
+  BLAS_FLAGS := -L$(BLAS_DIR) -Wl,-rpath,$(BLAS_DIR)
+endif
 
-.PHONY: all clean
+# Change this variable to the actual filename supplied by your teammate.
+PROJECT1_SRC ?= basic_sequential.c
 
-all: mpi-baseline generate-regular-inputs
+.PHONY: all clean check-sources
+all: project-1 project-2 project-3 project-4
 
-mpi-baseline: mpi_baseline.c
-	$(MPICC) $(CFLAGS) -o $@ $<
+check-sources:
+	@for f in "$(PROJECT1_SRC)" project1_fileio_blas_adaptive_v21.c mpi_baseline.c project4_nodeshared.c; do \
+	  test -f "$$f" || { echo "Missing source: $$f" >&2; exit 1; }; \
+	done
 
-mpi-adaptive: mpi_adaptive.c
-	$(MPICC) $(CPPFLAGS) $(BLAS_CPPFLAGS) $(CFLAGS) -o $@ $< $(LDFLAGS) $(BLAS_LDFLAGS) $(BLAS_LIBS)
+project-1: $(PROJECT1_SRC)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $< $(LDFLAGS) $(BLAS_FLAGS) $(BLAS_LIBS)
 
-mpi-balanced: mpi_balanced.c
-	$(MPICC) $(CPPFLAGS) $(CFLAGS) -o $@ $< $(LDFLAGS) $(BLAS_LDFLAGS) $(BLAS_LIBS) -lm
+project-2: project1_fileio_blas_adaptive_v21.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $< $(LDFLAGS) $(BLAS_FLAGS) $(BLAS_LIBS)
 
-test-balanced-partition: test_balanced_partition.c mpi_balanced.c
-	$(MPICC) $(CPPFLAGS) $(CFLAGS) -o $@ $< $(LDFLAGS) $(BLAS_LDFLAGS) $(BLAS_LIBS) -lm
+project-3: mpi_baseline.c
+	$(MPICC) $(CPPFLAGS) $(CFLAGS) -o $@ $< $(LDFLAGS) $(BLAS_FLAGS) -lm
 
-mpi-nodeshared: src/mpi_nodeshared.c
-	$(MPICC) $(CPPFLAGS) $(CFLAGS) -o $@ $< $(LDFLAGS) $(BLAS_LDFLAGS) $(BLAS_LIBS) -lm
-
-generate-regular-inputs: generate_regular_inputs.c
-	$(CC) $(CFLAGS) -o $@ $<
+project-4: project4_nodeshared.c
+	$(MPICC) $(CPPFLAGS) $(CFLAGS) -o $@ $< $(LDFLAGS) $(BLAS_FLAGS) $(BLAS_LIBS)
 
 clean:
-	rm -f mpi-baseline mpi-adaptive mpi-balanced mpi-nodeshared test-balanced-partition generate-regular-inputs
+	rm -f project-1 project-2 project-3 project-4
