@@ -284,3 +284,116 @@ bitwise agreement can vary with BLAS kernel selection and local GEMM shapes.
   no row splitting, asynchronous scheduling, or alternate sparse format.
 - The local tests are correctness evidence only. ACCESS performance and
   multi-node scalability require separate controlled experiments.
+
+## Node-shared MPI implementation (`src/mpi_nodeshared.c`)
+
+A single-file rewrite aimed at the bottlenecks in your Expanse phase data. For the
+regular `N=40000` workload at 16 ranks on one node, the earlier versions spent
+about 14 ms on a root-only `XW`, about 17 ms broadcasting the 10 MB intermediate
+to every rank, and about 7 ms scattering/gathering, but only about 1 ms on local
+sparse compute. The sequential OpenBLAS version (about 21-25 ms) beat the 16-rank runs.
+
+### How it works
+
+1. **One shared copy per node.** Ranks on a node share a single MPI-3
+   shared-memory window holding `A`, `X`, `W`, the dense intermediate and `Y`.
+   Nothing is copied per rank, so the memory-bandwidth-bound broadcast disappears.
+2. **Rank 0 reads the input straight into that window**, so on one node there is
+   no scatter. Each rank writes its rows of `Y` in place, so there is no gather.
+3. **`XW` is computed in parallel.** Every rank on the root node multiplies its
+   slice of the rows of `X` by `W` (OpenBLAS SGEMM, one thread per rank).
+4. **Rows of `A` are split by estimated work** (nonzeros plus a per-row cost, in
+   the spirit of the hybrid version), one contiguous block per rank.
+5. **Only one "leader" rank per node uses the network.** With several nodes the
+   leaders broadcast `A` and the dense input, and gather `Y` to rank 0.
+
+The order is `A(XW)` when `H <= F`, otherwise `(AX)W`, as in sequential v21.
+
+### Build and run
+
+```sh
+mpicc -O3 -Wall -Wextra -std=c11 -o mpi-nodeshared src/mpi_nodeshared.c -lopenblas -lm
+export OPENBLAS_NUM_THREADS=1
+mpirun -np 16 ./mpi-nodeshared A.csr X.dense W.dense Y.dense
+```
+
+`make mpi-nodeshared` does the same. It needs an MPI-3 library and standard
+(32-bit) OpenBLAS, but not `cblas.h`. The report keeps the labels your existing
+drivers parse (`CSR distribution`, `Root XW`, `Dense broadcast`,
+`Local computation`, `Output gathering`, `MPI elapsed time`). Here `Root XW` means
+"`XW` computed by the ranks of the root node", and the dense-broadcast and gather
+phases are zero on one node. `MPI setup-inclusive time` adds the time spent before
+the timer on creating the node communicators and the shared window (the maximum
+over ranks), so it is the figure to use when comparing against versions that do
+their setup differently. It also prints `Input reading` and `Output writing`.
+
+### What the timer covers
+
+The timer starts after rank 0 has read the files (as before) and ends after `Y` is
+complete on rank 0. The earlier versions read into rank 0's private memory and then
+distributed it inside the timer. This version reads directly into shared memory,
+so that cost is not in `MPI elapsed time`. To avoid overstating the gain, the table
+below also shows the hybrid time with its distribution and gather phases removed.
+Input parsing and text output (about 4-8 s per run) are outside the timer and
+dominate wall-clock time for every version, including this one.
+
+### Tests
+
+```sh
+python3 tests/test_nodeshared.py --executable ./mpi-nodeshared \
+    --reference ./sequential-v21 --mpiexec "mpirun --oversubscribe"
+```
+
+It compares against sequential v21 for both orders, empty rows, a dominant row,
+more ranks than rows, zero nonzeros, a one-row matrix, a partial 128-column
+block, and power-law-like rows, at 1, 2, 3, 4, 7 and 16 ranks. It also checks the
+reported partition against an independent calculation and that bad input stops
+every rank. Setting `NODESHARED_TEST_NODES=k` makes the program pretend there are
+`k` nodes (ranks are dealt round-robin), which exercises the leader broadcast and
+gather on one machine; the test runs 1 (real), 2 and 3 pretend nodes.
+
+All 198 runs passed against both MPICH 4.0 and Open MPI 4.1.2 (Expanse uses Open
+MPI 4.1.1). The largest absolute difference from v21 was `1.2e-4` (regular
+`A(XW)` case), within the `1e-4` absolute plus relative tolerance. **Not yet
+verified:** a real multi-node run over the network, and any run on Expanse.
+
+### Local measurements (not Expanse)
+
+Open MPI 4.1.2, OpenBLAS 0.3.20, a Ryzen 7 7435HS laptop (8 cores, 16 threads)
+under WSL2, `N=40000`, `nnz=640000`, one warm-up and five repetitions, with
+`scripts/compare_variants.py` checking every variant against sequential v21 first.
+`regular` and `clustered` are the datasets from `generate_large_inputs.py`
+(`clustered-strong`); `A(XW)` uses `F=128, H=64`, `(AX)W` uses `F=64, H=128`.
+Medians of `MPI elapsed time` in ms at 8 ranks (one per physical core):
+
+| Workload | Sequential v21 | Hybrid | Hybrid without distribute + gather | Node-shared | vs hybrid | vs stricter hybrid | vs sequential |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| regular, A(XW) | 48.4 | 93.8 | 59.9 | 15.1 | 6.2x | 4.0x | 3.2x |
+| clustered, A(XW) | 89.6 | 99.5 | 74.9 | 22.9 | 4.3x | 3.3x | 3.9x |
+| regular, (AX)W | 66.6 | 97.0 | 45.5 | 15.9 | 6.1x | 2.9x | 4.2x |
+| clustered, (AX)W | 84.2 | 128.2 | 77.9 | 20.6 | 6.2x | 3.8x | 4.1x |
+
+Sequential times are compute only. At 1 rank the new version is about equal to
+sequential (0.87-1.17x), as it should be, and the hybrid is 1.3-2.2x slower
+than the new version. The 16-rank runs are oversubscribed (16 ranks on 8 physical cores) and
+noisy, so they are not shown. This laptop has a different CPU, memory system and
+BLAS from Expanse, so absolute times and scaling will differ. Re-measure on
+Expanse before quoting any number in the report.
+
+### Running the comparison on Expanse
+
+`slurm/compare_nodeshared.sbatch` builds the hybrid and node-shared versions and
+runs `scripts/compare_variants.py` (validation, warm-ups, 10 repetitions) on
+1, 2 or 4 nodes: `sbatch --nodes=2 compare_nodeshared.sbatch`. It follows your
+existing job scripts (flat upload directory, same modules) but has **not been
+run**; check it before submitting.
+
+### Limitations
+
+- Every node holds the whole of `A` and the dense input, so memory per node does
+  not shrink as nodes are added. `XW` is done only by the root node's ranks, and
+  with several nodes the dense input must cross the network once per node.
+- The ranks on a node must be able to share memory (MPI-3 windows); the
+  `Y` rows of a node must fit one `MPI_Gatherv` (`N*H <= INT_MAX`).
+- Reading and writing text files is serial on rank 0 and now dominates total run
+  time. Parsing the files in parallel is the next place to look for savings.

@@ -6,6 +6,7 @@ expanse-build-*/
 mpi-adaptive
 mpi-balanced
 mpi-hybrid
+mpi-nodeshared
 mpi-*-timed
 sequential-v21
 project-[1-4]
@@ -33,3 +34,18 @@ expanse-benchmarks/multinode-validation-*/
 Thumbs.db
 *.swp
 *~
+
+# Expanse compiled job directories
+expanse-build-*/
+
+# Generated validation outputs
+expanse-validation/
+
+# Large generated input matrices
+large-inputs/*.csr
+large-inputs/*.dense
+reverse-inputs/*.dense
+
+# Python cache and temporary files
+__pycache__/
+*.pyc

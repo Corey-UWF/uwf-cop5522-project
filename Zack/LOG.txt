@@ -483,3 +483,79 @@ and performance evaluation are being conducted on Expanse.
 
 **Next steps:** Verify numerical correctness of the replicated-CSR implementation, compare distribution and total execution times against the original hybrid MPI implementation, and determine whether the optimization should be incorporated into 
 the final project.
+
+**Nov. 24, 2026 – CSR Communication Optimization Results**
+
+Completed controlled A/B benchmarking of the original scatter-based and experimental replicated-CSR hybrid MPI implementations on one, two, and four Expanse nodes. All three Slurm jobs completed successfully, producing 240 measurements across four 
+workloads with 10 repetitions per variant and node configuration. Numerical validation passed for both implementations.
+
+Replicated CSR distribution increased single-node runtime by 12.7–21.6%, but reduced two-node runtime by 14.3–17.7% and four-node runtime by 20.5–32.0%. For the regular A(XW) workload on four nodes, median CSR distribution time decreased from 
+70.03 ms to 9.09 ms, and setup-inclusive runtime decreased from 143.53 ms to 97.60 ms.
+
+These findings demonstrate that the optimal communication strategy depends on node count. The next step is to implement a node-aware hybrid MPI variant that uses scatter-based distribution within one node and replicated CSR broadcasts across 
+multiple nodes.
+
+**Nov. 24, 2026:** Implemented and evaluated a node-aware hybrid MPI variant that selects CSR scatter for single-node execution and replicated CSR broadcast for multi-node execution. Initial two-node and four-node runs were interrupted by 
+intermittent Open MPI ORTE daemon failures. Repeated the multi-node experiments successfully using sequential Slurm job dependencies. All three completed experiments passed numerical validation, producing 240 measurements across one, two, 
+and four nodes. Compared with the selected reference implementations, the node-aware variant reduced median setup-inclusive runtime by approximately 7–8% on one node, 38–47% on two nodes, and 20–26% on four nodes. Additional source and timing 
+comparisons are needed to determine which implementation differences account for these gains.
+
+Nov. 24, 2026: Investigated the unexpectedly large performance improvements observed in the node-aware hybrid MPI implementation. Analysis of 240 benchmark measurements showed that most of the runtime reduction occurred during partition setup 
+rather than CSR distribution or numerical computation. Source-code comparisons confirmed that both implementations use the same timing boundaries, but the node-aware version performs additional MPI communicator initialization before timing begins. 
+This may reduce subsequent MPI initialization or communication overhead, although the cause has not yet been verified. A controlled experiment comparing the original replicated implementation against a version with identical communicator initialization 
+was proposed to isolate this effect. ChatGPT assisted with performance analysis, source comparisons, and experimental planning.
+
+**Nov. 24, 2026 – Node-shared MPI implementation (`src/mpi_nodeshared.c`)**
+
+Reviewed the Expanse phase data and found that the sequential OpenBLAS version (about 21-25 ms) beat the 16-rank MPI runs. For regular N=40,000 at 16 ranks, the root-only XW (about 14 ms), the broadcast copying the 10 MB intermediate to every rank
+(about 17 ms), and scatter/gather (about 7 ms) dominated, while local sparse compute was about 1 ms.
+
+Wrote a new single-file implementation in which all ranks on a node share one MPI-3 shared-memory window holding A, X, W, the dense intermediate and Y. Rank 0 reads the input directly into that window, every rank on the root node computes a slice of XW, 
+rows of A are split by estimated work, and only one leader rank per node communicates (broadcast of A and the dense input, gather of Y). Adaptive order (A(XW) if H <= F), single-threaded OpenBLAS and the output format are unchanged.
+
+Validation: `tests/test_nodeshared.py` passed 198 runs against sequential v21 on both MPICH 4.0 and Open MPI 4.1.2 (Expanse uses 4.1.1), covering both orders, empty rows, a dominant row, more ranks than rows, zero nonzeros, a one-row matrix, a partial 
+128-column block, power-law-like rows, 1-16 ranks, and emulated 2- and 3-node layouts. Largest absolute difference from v21 was 1.2e-4 within the 1e-4 absolute plus relative tolerance. A real multi-node run has NOT been tested.
+
+Local measurements (Ryzen 7 7435HS laptop under WSL2, not Expanse; N=40,000, 5 repetitions, 8 ranks, medians of MPI elapsed time): node-shared 15.1 / 22.9 / 15.9 / 20.6 ms versus hybrid 93.8 / 99.5 / 97.0 / 128.2 ms for regular A(XW), clustered A(XW), 
+regular (AX)W and clustered (AX)W. Discounting the hybrid's distribution and gather phases (which this design avoids by reading into shared memory) the gain is 2.9-4.0x. The node-shared version is 3.2-4.2x faster than sequential v21 on this machine, 
+and about equal to it at 1 rank. These numbers must be re-measured on Expanse before use in the report.
+
+Timing caveat: the timer starts after rank 0 has read the files, but this version reads straight into shared memory, so the old distribution cost is not inside the timer. Input parsing and text output (4-8 s per run) dominate wall-clock time for 
+every version.
+
+Prepared `scripts/compare_variants.py` and `slurm/compare_nodeshared.sbatch` for an Expanse A/B run on 1, 2 and 4 nodes (not yet run). `MPI setup-inclusive time` in the node-shared program now measures communicator and shared-window setup (it first 
+just repeated the elapsed time, which would have hidden setup done before the timer).
+
+**AI interaction:** An AI coding assistant (Copilot in VS Code) reviewed the existing implementations and measurements, proposed and wrote the node-shared design and its tests, and ran the local validation and benchmarks. Compilation and testing 
+were done locally under WSL with isolated MPICH and Open MPI builds; nothing was run on Expanse.
+
+**Next steps:** Run `compare_nodeshared.sbatch` on 1, 2 and 4 Expanse nodes, confirm correctness there, and decide whether to adopt this version as the final MPI program.
+
+**Nov. 24, 2026:** Completed a controlled two-node MPI initialization experiment comparing the original replicated-CSR implementation, a version with preliminary MPI communicator initialization, and the integrated node-aware implementation. An 
+initial run was interrupted by an Open MPI ORTE daemon failure, but a revised benchmarking script successfully recovered 36 existing measurements and collected 84 additional measurements. All three implementations passed numerical validation across 
+120 total measurements.
+
+Adding the communicator initialization sequence reduced median setup-inclusive runtime by approximately 38.8–42.9% compared with the original replicated reference. Most of the improvement occurred outside the main MPI elapsed interval, with measured 
+setup overhead decreasing from approximately 55–58 ms to 9–13 ms. The warmed reference and node-aware implementation performed similarly, supporting the hypothesis that preliminary MPI initialization explains much of the earlier performance difference. 
+Since the additional initialization occurs before timing begins, the results were identified as initialization-sensitive timing improvements rather than definitive end-to-end application speedups. ChatGPT assisted with experimental design, benchmark recovery, 
+and performance interpretation.
+
+**Nov. 24, 2026:** Completed an end-to-end MPI timing experiment to determine whether preliminary communicator initialization produced genuine application-level performance improvements. Compared baseline replicated CSR, warmed replicated CSR, and node-aware 
+hybrid implementations across four workloads using two Expanse nodes and 16 MPI ranks. All 120 measurements passed numerical validation. Although communicator warm-up reduced median setup-inclusive runtime by approximately 38–42%, rank-0 process lifetime 
+improved by less than 1%, and external wall-time results were inconsistent. These findings indicate that much of the previously observed speedup was associated with initialization-sensitive timing boundaries rather than an equivalent reduction in total application 
+execution time. ChatGPT assisted with experiment design, benchmark scripts, analysis, and interpretation.
+
+**Nov. 24, 2026:** Continued developing and testing a node-shared MPI implementation of the sparse matrix computation \(Y = AXW\) on Expanse. The implementation uses MPI shared-memory windows to reduce communication and data duplication between ranks on the same node. 
+Validated the implementation against the sequential OpenBLAS reference across 165 single-node test runs and successfully tested both multiplication orders across two nodes.
+
+Ran a single-node benchmark comparing node-shared MPI with the existing hybrid MPI implementation using up to 16 ranks. The node-shared version achieved a 2.87× compute-oriented speedup over the sequential reference for the regular (AX)W workload and 2.51× for the 
+clustered workload. With ChatGPT's assistance, reviewed the benchmark results, identified differences in timing boundaries, and updated the Python benchmarking script to record setup-inclusive MPI time alongside computation and wall-clock time. Submitted a two-node, 
+32-rank comparison to evaluate multi-node performance.
+
+**Nov. 24, 2026 (continued):** Completed a two-node benchmark comparing the node-shared and original hybrid MPI implementations using 32 ranks across four workloads. Node-shared MPI achieved 8.73–11.17× lower reported MPI elapsed times and 1.48–1.60× speedup using 
+setup-inclusive measurements. External wall-clock improvements were more modest, approximately 1.05–1.26×. With ChatGPT's assistance, analyzed the differences among MPI elapsed, setup-inclusive, and end-to-end timings and identified the importance of accounting for 
+setup and I/O overhead when evaluating parallel performance.
+
+**Nov. 24, 2026 (continued):** Conducted controlled benchmarks on Expanse comparing four MPI implementations: original hybrid, replicated-CSR, node-aware hybrid, and node-shared MPI. Tested identical workloads using 16 MPI ranks distributed across one, two, and four 
+nodes, with ten timed repetitions per configuration (480 measurements total). Node-shared MPI achieved the lowest reported MPI elapsed time in all 12 configurations and the lowest median end-to-end wall time in 10 of 12. With ChatGPT's assistance, analyzed performance 
+rankings, setup-inclusive overhead, communication costs, and the effects of distributing a fixed number of MPI ranks across multiple nodes.
